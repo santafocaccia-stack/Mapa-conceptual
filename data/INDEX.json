@@ -8,7 +8,7 @@
       "description": "Puente Android ↔ Horus para control remoto y comunicación bidireccional con el teléfono",
       "status": "active",
       "progress": 47,
-      "tags": ["android", "nodejs", "bridge", "tts"],
+      "tags": ["android", "nodejs", "bridge", "tts", "whatsapp"],
       "icon": "📱"
     },
     {
@@ -16,7 +16,7 @@
       "slug": "mapa-conceptual",
       "description": "Dashboard interactivo para visualizar el avance de proyectos en grafo, kanban y lista",
       "status": "active",
-      "progress": 48,
+      "progress": 74,
       "tags": ["web", "dashboard", "viz"],
       "icon": "🗺️"
     }
