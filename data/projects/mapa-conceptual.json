@@ -1,0 +1,109 @@
+{
+  "project": {
+    "name": "Mapa Conceptual",
+    "slug": "mapa-conceptual",
+    "description": "Dashboard interactivo single-file para visualizar el avance de proyectos en 3 vistas: grafo, kanban y lista. 100% estático, sin backend.",
+    "status": "active",
+    "progress": 48,
+    "lastUpdated": "2026-05-23",
+    "tags": ["web", "dashboard", "visualization", "static"]
+  },
+  "nodes": [
+    {
+      "id": "arch",
+      "label": "Architecture & Design",
+      "description": "Arquitectura general, stack tecnológico, formato de datos JSON y paleta visual. Documentado en ARCHITECTURE.md.",
+      "status": "done",
+      "progress": 100,
+      "group": "design",
+      "priority": "high"
+    },
+    {
+      "id": "graph-view",
+      "label": "Graph View",
+      "description": "Vista de grafo interactivo con vis-network. Nodos coloreados por estado, edges con dependencias, layout jerárquico y panel de info.",
+      "status": "active",
+      "progress": 80,
+      "group": "frontend",
+      "priority": "high"
+    },
+    {
+      "id": "kanban-view",
+      "label": "Kanban View",
+      "description": "Tablero kanban drag & drop con SortableJS. Columnas To Do, In Progress, In Review, Done y Blocked.",
+      "status": "active",
+      "progress": 60,
+      "group": "frontend",
+      "priority": "high"
+    },
+    {
+      "id": "list-view",
+      "label": "List View",
+      "description": "Vista de lista ordenable por columna con filtros rápidos, badges de grupo y barra de progreso por fila.",
+      "status": "pending",
+      "progress": 0,
+      "group": "frontend",
+      "priority": "medium"
+    },
+    {
+      "id": "responsive",
+      "label": "Responsive Layout",
+      "description": "Layout adaptativo desktop/tablet/mobile. Sidebar colapsable, drawer en mobile, breakpoints a 1024px y 768px.",
+      "status": "active",
+      "progress": 50,
+      "group": "design",
+      "priority": "medium"
+    },
+    {
+      "id": "deployment",
+      "label": "Deployment",
+      "description": "Deploy automático a GitHub Pages mediante GitHub Actions. Workflow en .github/workflows/pages.yml.",
+      "status": "pending",
+      "progress": 0,
+      "group": "infrastructure",
+      "priority": "medium"
+    },
+    {
+      "id": "data-loader",
+      "label": "Data Loader",
+      "description": "Carga de INDEX.json y proyectos individuales vía fetch. Caché en memoria y manejo de errores de red.",
+      "status": "active",
+      "progress": 70,
+      "group": "backend",
+      "priority": "high"
+    },
+    {
+      "id": "filters",
+      "label": "Filters & Search",
+      "description": "Sistema de filtros por estado, grupo y prioridad. Búsqueda por nombre con debounce. Aplica a las 3 vistas.",
+      "status": "active",
+      "progress": 40,
+      "group": "frontend",
+      "priority": "medium"
+    }
+  ],
+  "edges": [
+    {"from": "arch", "to": "graph-view", "type": "dependency"},
+    {"from": "arch", "to": "kanban-view", "type": "dependency"},
+    {"from": "arch", "to": "list-view", "type": "dependency"},
+    {"from": "arch", "to": "responsive", "type": "dependency"},
+    {"from": "data-loader", "to": "graph-view", "type": "dependency", "label": "data"},
+    {"from": "data-loader", "to": "kanban-view", "type": "dependency", "label": "data"},
+    {"from": "data-loader", "to": "list-view", "type": "dependency", "label": "data"},
+    {"from": "filters", "to": "graph-view", "type": "dependency"},
+    {"from": "filters", "to": "kanban-view", "type": "dependency"},
+    {"from": "filters", "to": "list-view", "type": "dependency"},
+    {"from": "graph-view", "to": "deployment", "type": "dependency"},
+    {"from": "kanban-view", "to": "deployment", "type": "dependency"},
+    {"from": "responsive", "to": "deployment", "type": "dependency"}
+  ],
+  "milestones": [
+    {
+      "id": "m1",
+      "label": "V1 Release",
+      "date": "2026-05-25",
+      "status": "active",
+      "description": "Primera versión pública con las 3 vistas, filtros y deploy a GitHub Pages"
+    }
+  ]
+}

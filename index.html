@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mapa Conceptual — Dashboard interactivo de proyectos" />
+  <title>🗺️ Mapa Conceptual</title>
+
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+
+  <style>
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #1a1d27;
+      --bg-tertiary: #222639;
+      --border: #2a2e3e;
+      --text-primary: #e4e7eb;
+      --text-secondary: #8b8fa3;
+      --accent: #2dd4bf;
+      --accent-hover: #5eead4;
+      --done: #22c55e;
+      --active: #2dd4bf;
+      --pending: #6b7280;
+      --blocked: #ef4444;
+      --review: #f59e0b;
+      --backend: #3b82f6;
+      --frontend: #a855f7;
+      --mobile: #22c55e;
+      --infra: #f59e0b;
+      --design: #ec4899;
+      --priority-high: #ef4444;
+      --priority-medium: #f59e0b;
+      --priority-low: #6b7280;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+      --sidebar-width: 280px;
+      --header-height: 56px;
+      --radius-card: 8px;
+      --radius-btn: 6px;
+      --radius-badge: 4px;
+      --t-fast: 150ms ease;
+      --t-base: 200ms ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    code, pre, .mono {
+      font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+    }
+
+    input {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border);
+    }
+
+    /* ============== Layout ============== */
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-height) 1fr;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+      height: 100vh;
+    }
+
+    /* ============== Header ============== */
+    .header {
+      grid-area: header;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      z-index: 50;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .header-brand .logo {
+      font-size: 20px;
+    }
+
+    .header-search {
+      flex: 1;
+      max-width: 420px;
+      position: relative;
+    }
+
+    .header-search input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      color: var(--text-primary);
+      font-size: 13px;
+      transition: border-color var(--t-base);
+    }
+
+    .header-search input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .header-search::before {
+      content: "🔍";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-btn);
+      font-size: 16px;
+      color: var(--text-secondary);
+      transition: background var(--t-base), color var(--t-base);
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .sidebar-toggle {
+      display: none;
+    }
+
+    /* ============== Sidebar ============== */
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    /* Project cards */
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .project-card {
+      background: var(--bg-tertiary);
+      border: 1px solid transparent;
+      border-radius: var(--radius-card);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color var(--t-base), background var(--t-base), transform var(--t-base);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .project-card:hover {
+      border-color: var(--border);
+    }
+
+    .project-card.active {
+      border-color: var(--accent);
+      background: rgba(45, 212, 191, 0.08);
+    }
+
+    .project-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .project-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .project-name {
+      font-weight: 600;
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: var(--radius-badge);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .status-badge.done { background: rgba(34, 197, 94, 0.15); color: var(--done); }
+    .status-badge.active { background: rgba(45, 212, 191, 0.15); color: var(--active); }
+    .status-badge.pending { background: rgba(107, 114, 128, 0.2); color: var(--pending); }
+    .status-badge.blocked { background: rgba(239, 68, 68, 0.15); color: var(--blocked); }
+    .status-badge.review { background: rgba(245, 158, 11, 0.15); color: var(--review); }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-primary);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 400ms ease;
+    }
+
+    .progress-bar-fill.done { background: var(--done); }
+    .progress-bar-fill.active { background: var(--accent); }
+    .progress-bar-fill.pending { background: var(--pending); }
+    .progress-bar-fill.blocked { background: var(--blocked); }
+    .progress-bar-fill.review { background: var(--review); }
+
+    .project-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Filters */
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .filter-group-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      padding: 0 4px;
+    }
+
+    .filter-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      font-size: 13px;
+      transition: background var(--t-fast);
+      user-select: none;
+    }
+
+    .filter-check:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .filter-check input {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .filter-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Info panel */
+    .info-panel {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-card);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .info-row strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .info-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .info-counts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .info-count {
+      padding: 6px 4px;
+      border-radius: var(--radius-badge);
+      text-align: center;
+      background: var(--bg-primary);
+    }
+
+    .info-count-num {
+      font-size: 14px;
+      font-weight: 700;
+      display: block;
+    }
+
+    .info-count-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ============== Main ============== */
+    .main {
+      grid-area: main;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .main-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .main-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .main-title-icon { font-size: 22px; }
+    .main-title-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tabs {
+      display: inline-flex;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-btn);
+      padding: 4px;
+      position: relative;
+      gap: 2px;
+    }
+
+    .tab-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      transition: color var(--t-base), background var(--t-base);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-tertiary);
+      color: var(--accent);
+    }
+
+    .main-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow: auto;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* ============== Welcome / Empty / Error states ============== */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 40px;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .state-panel .state-icon {
+      font-size: 56px;
+      opacity: 0.5;
+    }
+
+    .state-panel h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .state-panel p {
+      color: var(--text-secondary);
+      max-width: 420px;
+    }
+
+    .state-panel.error h2 { color: var(--blocked); }
+
+    /* ============== Graph view ============== */
+    .graph-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #graph-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .graph-overlay {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 280px;
+      max-height: calc(100% - 32px);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 14px;
+      box-shadow: var(--shadow-lg);
+      z-index: 5;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .graph-overlay.visible { display: flex; }
+
+    .graph-overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .graph-overlay h4 {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .graph-overlay .close-btn {
+      color: var(--text-secondary);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .graph-overlay-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .graph-overlay-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .graph-overlay-meta div {
+      background: var(--bg-tertiary);
+      padding: 6px 8px;
+      border-radius: var(--radius-badge);
+    }
+
+    .graph-overlay-meta div span {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+    }
+
+    .graph-legend {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-md);
+      font-size: 11px;
+      z-index: 4;
+      max-width: 220px;
+    }
+
+    .graph-legend h5 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .legend-items {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* ============== Kanban view ============== */
+    .kanban-wrap {
+      padding: 20px;
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(260px, 1fr));
+      gap: 14px;
+      height: 100%;
+      min-width: max-content;
+    }
+
+    .kanban-column {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-card);
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      max-height: 100%;
+    }
+
+    .kanban-col-header {
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .kanban-col-header h4 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kanban-col-header .col-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .kanban-col-header .col-count {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .kanban-col-body {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 60px;
+    }
+
+    .kanban-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 10px 12px;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+      will-change: transform;
+    }
+
+    .kanban-card:hover {
+      border-color: var(--accent);
+    }
+
+    .kanban-card:active { cursor: grabbing; }
+
+    .kanban-card.sortable-ghost {
+      opacity: 0.4;
+      background: var(--bg-primary);
+    }
+
+    .kanban-card.sortable-chosen {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .kanban-card-title {
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .kanban-card-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .group-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: var(--radius-badge);
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .group-badge.backend { background: rgba(59, 130, 246, 0.15); color: var(--backend); }
+    .group-badge.frontend { background: rgba(168, 85, 247, 0.15); color: var(--frontend); }
+    .group-badge.mobile { background: rgba(34, 197, 94, 0.15); color: var(--mobile); }
+    .group-badge.infrastructure { background: rgba(245, 158, 11, 0.15); color: var(--infra); }
+    .group-badge.design { background: rgba(236, 72, 153, 0.15); color: var(--design); }
+
+    .priority-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .priority-pill::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .priority-pill.high { background: rgba(239, 68, 68, 0.12); color: var(--priority-high); }
+    .priority-pill.medium { background: rgba(245, 158, 11, 0.12); color: var(--priority-medium); }
+    .priority-pill.low { background: rgba(107, 114, 128, 0.2); color: var(--priority-low); }
+
+    .kanban-card-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .kanban-card-progress-text {
+      font-size: 10px;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ============== List view ============== */
+    .list-wrap {
+      padding: 20px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .list-table {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+
+    .list-row {
+      display: grid;
+      grid-template-columns: 32px minmax(160px, 2.5fr) minmax(120px, 3fr) 100px 100px 160px;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--t-fast);
+    }
+
+    .list-row:last-child { border-bottom: none; }
+    .list-row.body:hover { background: var(--bg-tertiary); }
+
+    .list-row.head {
+      background: var(--bg-tertiary);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+    }
+
+    .list-row.head .sortable {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+
+    .list-row.head .sortable:hover { color: var(--text-primary); }
+    .list-row.head .sort-arrow { opacity: 0; font-size: 10px; }
+    .list-row.head .sortable.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+
+    .list-row .status-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .list-row .status-icon.done { background: var(--done); }
+    .list-row .status-icon.active { background: var(--active); }
+    .list-row .status-icon.pending { background: var(--pending); }
+    .list-row .status-icon.blocked { background: var(--blocked); }
+    .list-row .status-icon.review { background: var(--review); }
+
+    .list-row .name {
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-row .name:hover { color: var(--accent); }
+
+    .list-row .desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-row.expanded .desc {
+      white-space: normal;
+      overflow: visible;
+    }
+
+    .list-row .progress-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-row .progress-cell .progress-bar {
+      flex: 1;
+      height: 6px;
+    }
+
+    .list-row .progress-cell span {
+      font-size: 11px;
+      color: var(--text-secondary);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ============== Backdrop (mobile sidebar) ============== */
+    .backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+    }
+    .backdrop.visible { display: block; }
+
+    /* ============== Responsive ============== */
+    @media (max-width: 1024px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "header"
+          "main";
+      }
+
+      .sidebar {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        max-width: 85vw;
+        z-index: 45;
+        transform: translateX(-100%);
+        transition: transform 250ms ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .sidebar-toggle {
+        display: inline-flex;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root { --header-height: 52px; }
+
+      .header { padding: 0 12px; gap: 10px; }
+      .header-brand .name-text { display: none; }
+      .header-search { max-width: none; }
+
+      .main-toolbar {
+        padding: 10px 14px;
+        gap: 10px;
+      }
+
+      .main-title { font-size: 15px; }
+      .main-title-icon { font-size: 18px; }
+
+      .tab-btn { padding: 6px 10px; font-size: 12px; }
+      .tab-btn .tab-emoji { display: inline; }
+
+      .kanban-wrap { padding: 12px; }
+      .kanban {
+        grid-template-columns: repeat(5, 78vw);
+        gap: 10px;
+      }
+
+      .list-wrap { padding: 10px; }
+      .list-row {
+        grid-template-columns: 24px 1fr 80px;
+        gap: 8px;
+        padding: 10px;
+      }
+      .list-row .desc,
+      .list-row .group-cell,
+      .list-row .priority-cell { display: none; }
+
+      .graph-overlay {
+        top: auto;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: var(--radius-card) var(--radius-card) 0 0;
+      }
+
+      .graph-legend {
+        bottom: 8px;
+        right: 8px;
+        font-size: 10px;
+        max-width: 140px;
+        padding: 8px;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0ms !important;
+        animation-duration: 0ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Header -->
+    <header class="header">
+      <button class="icon-btn sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      <div class="header-brand">
+        <span class="logo">🗺️</span>
+        <span class="name-text">Mapa Conceptual</span>
+      </div>
+      <div class="header-search">
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Buscar nodos..."
+          autocomplete="off"
+        />
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="settings-btn" aria-label="Settings" title="Configuración">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <h3>Proyectos</h3>
+        <div class="project-list" id="project-list">
+          <div class="state-panel" style="padding:12px; height:auto;">
+            <p>Cargando proyectos...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Filtros</h3>
+        <div class="filter-group">
+          <div class="filter-group-title">Estado</div>
+          <div id="filter-status"></div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-title">Grupo</div>
+          <div id="filter-group"></div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-title">Prioridad</div>
+          <div id="filter-priority"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Resumen</h3>
+        <div class="info-panel" id="info-panel">
+          <div class="state-panel" style="padding:0; height:auto; text-align:left;">
+            <p style="font-size:12px;">Selecciona un proyecto para ver detalles.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="main-toolbar">
+        <div class="main-title">
+          <span class="main-title-icon" id="main-title-icon">🗺️</span>
+          <span class="main-title-text" id="main-title-text">Mapa Conceptual</span>
+        </div>
+        <div class="tabs" role="tablist">
+          <button class="tab-btn active" data-view="graph" role="tab"><span class="tab-emoji">🕸</span> Grafo</button>
+          <button class="tab-btn" data-view="kanban" role="tab"><span class="tab-emoji">📋</span> Kanban</button>
+          <button class="tab-btn" data-view="list" role="tab"><span class="tab-emoji">📃</span> Lista</button>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <!-- Graph view -->
+        <section class="view active" id="view-graph">
+          <div class="graph-wrap">
+            <div id="graph-canvas"></div>
+            <div class="graph-overlay" id="graph-overlay">
+              <div class="graph-overlay-header">
+                <h4 id="overlay-title">Nodo</h4>
+                <span class="close-btn" id="overlay-close">✕</span>
+              </div>
+              <div class="graph-overlay-desc" id="overlay-desc"></div>
+              <div class="graph-overlay-meta" id="overlay-meta"></div>
+            </div>
+            <div class="graph-legend">
+              <h5>Estados</h5>
+              <div class="legend-items">
+                <div class="legend-item"><span class="legend-swatch" style="background:#22c55e"></span> Done</div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#2dd4bf"></span> Active</div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#f59e0b"></span> Review</div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#6b7280"></span> Pending</div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#ef4444"></span> Blocked</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Kanban view -->
+        <section class="view" id="view-kanban">
+          <div class="kanban-wrap">
+            <div class="kanban" id="kanban-board"></div>
+          </div>
+        </section>
+
+        <!-- List view -->
+        <section class="view" id="view-list">
+          <div class="list-wrap">
+            <div class="list-table" id="list-table"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- CDN libs -->
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"
+    onerror="window.__VIS_LOAD_FAILED__=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"
+    onerror="window.__SORT_LOAD_FAILED__=true"></script>
+
+  <script>
+    'use strict';
+
+    /* ============== Constants ============== */
+    const STATUS_OPTIONS = [
+      { key: 'done', label: 'Done', color: '#22c55e' },
+      { key: 'active', label: 'Active', color: '#2dd4bf' },
+      { key: 'pending', label: 'Pending', color: '#6b7280' },
+      { key: 'blocked', label: 'Blocked', color: '#ef4444' },
+      { key: 'review', label: 'Review', color: '#f59e0b' },
+    ];
+
+    const GROUP_OPTIONS = [
+      { key: 'backend', label: 'Backend', color: '#3b82f6' },
+      { key: 'frontend', label: 'Frontend', color: '#a855f7' },
+      { key: 'mobile', label: 'Mobile', color: '#22c55e' },
+      { key: 'infrastructure', label: 'Infrastructure', color: '#f59e0b' },
+      { key: 'design', label: 'Design', color: '#ec4899' },
+    ];
+
+    const PRIORITY_OPTIONS = [
+      { key: 'high', label: 'High', color: '#ef4444' },
+      { key: 'medium', label: 'Medium', color: '#f59e0b' },
+      { key: 'low', label: 'Low', color: '#6b7280' },
+    ];
+
+    const KANBAN_COLUMNS = [
+      { id: 'todo', label: 'To Do', status: 'pending', color: '#6b7280' },
+      { id: 'inprogress', label: 'In Progress', status: 'active', color: '#2dd4bf' },
+      { id: 'inreview', label: 'In Review', status: 'review', color: '#f59e0b' },
+      { id: 'done', label: 'Done', status: 'done', color: '#22c55e' },
+      { id: 'blocked', label: 'Blocked', status: 'blocked', color: '#ef4444' },
+    ];
+
+    const STATUS_TO_COLUMN = {
+      pending: 'todo',
+      active: 'inprogress',
+      review: 'inreview',
+      done: 'done',
+      blocked: 'blocked',
+    };
+
+    /* ============== Global state ============== */
+    const app = {
+      currentProject: null,
+      allData: { INDEX: null, projects: {} },
+      currentView: 'graph',
+      filters: {
+        status: STATUS_OPTIONS.map(s => s.key),
+        group: GROUP_OPTIONS.map(g => g.key),
+        priority: PRIORITY_OPTIONS.map(p => p.key),
+        search: '',
+      },
+      sort: { col: 'name', dir: 'asc' },
+      network: null,
+      sortableInstances: [],
+      scrollPositions: {},
+    };
+
+    /* ============== Utils ============== */
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    function debounce(fn, wait) {
+      let t;
+      return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+      };
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function statusLabel(s) {
+      const opt = STATUS_OPTIONS.find(o => o.key === s);
+      return opt ? opt.label : s;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    /* ============== Data loading ============== */
+    async function fetchJSON(url) {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' loading ' + url);
+      try {
+        return await res.json();
+      } catch (e) {
+        throw new Error('Invalid JSON in ' + url);
+      }
+    }
+
+    async function loadIndex() {
+      app.allData.INDEX = await fetchJSON('data/INDEX.json');
+      return app.allData.INDEX;
+    }
+
+    async function loadProject(slug) {
+      if (app.allData.projects[slug]) return app.allData.projects[slug];
+      const data = await fetchJSON('data/projects/' + slug + '.json');
+      app.allData.projects[slug] = data;
+      return data;
+    }
+
+    /* ============== Rendering: Sidebar ============== */
+    function renderProjectList() {
+      const root = $('#project-list');
+      const idx = app.allData.INDEX;
+      if (!idx || !idx.projects || idx.projects.length === 0) {
+        root.innerHTML = '<div class="state-panel" style="padding:12px; height:auto;"><p>No hay proyectos.</p></div>';
+        return;
+      }
+      root.innerHTML = '';
+      idx.projects.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'project-card' + (app.currentProject === p.slug ? ' active' : '');
+        card.dataset.slug = p.slug;
+        const statusKey = p.status || 'pending';
+        card.innerHTML = `
+          <div class="project-card-header">
+            <span class="project-icon">${escapeHtml(p.icon || '📦')}</span>
+            <span class="project-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+            <span class="status-badge ${escapeHtml(statusKey)}">${escapeHtml(statusLabel(statusKey))}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar-fill ${escapeHtml(statusKey)}" style="width:${clamp(p.progress || 0, 0, 100)}%"></div>
+          </div>
+          <div class="project-meta">
+            <span>${clamp(p.progress || 0, 0, 100)}%</span>
+            <span>${(p.tags || []).slice(0, 2).map(escapeHtml).join(' · ')}</span>
+          </div>
+        `;
+        card.addEventListener('click', () => selectProject(p.slug));
+        root.appendChild(card);
+      });
+    }
+
+    function renderFilters() {
+      const renderGroup = (rootSel, options, kind) => {
+        const root = $(rootSel);
+        root.innerHTML = '';
+        options.forEach(opt => {
+          const id = `f-${kind}-${opt.key}`;
+          const label = document.createElement('label');
+          label.className = 'filter-check';
+          label.htmlFor = id;
+          label.innerHTML = `
+            <input type="checkbox" id="${id}" data-kind="${kind}" data-key="${opt.key}" ${app.filters[kind].includes(opt.key) ? 'checked' : ''}/>
+            <span class="filter-dot" style="background:${opt.color}"></span>
+            <span>${opt.label}</span>
+          `;
+          root.appendChild(label);
+        });
+      };
+      renderGroup('#filter-status', STATUS_OPTIONS, 'status');
+      renderGroup('#filter-group', GROUP_OPTIONS, 'group');
+      renderGroup('#filter-priority', PRIORITY_OPTIONS, 'priority');
+
+      $$('#filter-status input, #filter-group input, #filter-priority input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const kind = e.target.dataset.kind;
+          const key = e.target.dataset.key;
+          const set = new Set(app.filters[kind]);
+          if (e.target.checked) set.add(key); else set.delete(key);
+          app.filters[kind] = Array.from(set);
+          rerenderActiveView();
+        });
+      });
+    }
+
+    function renderInfoPanel() {
+      const root = $('#info-panel');
+      const data = currentProjectData();
+      if (!data) {
+        root.innerHTML = '<p style="font-size:12px; color:var(--text-secondary);">Selecciona un proyecto para ver detalles.</p>';
+        return;
+      }
+      const nodes = data.nodes || [];
+      const counts = STATUS_OPTIONS.reduce((acc, s) => {
+        acc[s.key] = nodes.filter(n => n.status === s.key).length;
+        return acc;
+      }, {});
+      const totalProgress = nodes.length
+        ? Math.round(nodes.reduce((sum, n) => sum + (n.progress || 0), 0) / nodes.length)
+        : 0;
+
+      root.innerHTML = `
+        <div class="info-progress">
+          <div class="info-progress-label">
+            <span>Progreso global</span>
+            <strong>${totalProgress}%</strong>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar-fill active" style="width:${totalProgress}%"></div>
+          </div>
+        </div>
+        <div class="info-row">
+          <span>Última actualización</span>
+          <strong>${escapeHtml(data.project.lastUpdated || '—')}</strong>
+        </div>
+        <div class="info-row">
+          <span>Nodos</span>
+          <strong>${nodes.length}</strong>
+        </div>
+        <div class="info-counts">
+          <div class="info-count">
+            <span class="info-count-num" style="color:var(--done)">${counts.done}</span>
+            <span class="info-count-label">Done</span>
+          </div>
+          <div class="info-count">
+            <span class="info-count-num" style="color:var(--active)">${counts.active}</span>
+            <span class="info-count-label">Active</span>
+          </div>
+          <div class="info-count">
+            <span class="info-count-num" style="color:var(--pending)">${counts.pending + counts.blocked + counts.review}</span>
+            <span class="info-count-label">Pending</span>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ============== Filter logic ============== */
+    function applyFilters(nodes) {
+      const q = app.filters.search.trim().toLowerCase();
+      return (nodes || []).filter(n => {
+        if (!app.filters.status.includes(n.status)) return false;
+        if (n.group && !app.filters.group.includes(n.group)) return false;
+        if (n.priority && !app.filters.priority.includes(n.priority)) return false;
+        if (q) {
+          const hay = (n.label || '') + ' ' + (n.description || '');
+          if (!hay.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function currentProjectData() {
+      if (!app.currentProject) return null;
+      return app.allData.projects[app.currentProject] || null;
+    }
+
+    /* ============== Graph view ============== */
+    function renderGraph() {
+      const container = $('#graph-canvas');
+      if (window.__VIS_LOAD_FAILED__ || typeof vis === 'undefined') {
+        container.innerHTML = '';
+        container.insertAdjacentHTML('beforeend', '<div class="state-panel"><span class="state-icon">⚠️</span><h2>No se pudo cargar vis-network</h2><p>Verifica tu conexión a internet o intenta recargar.</p></div>');
+        return;
+      }
+
+      const data = currentProjectData();
+      if (!data) {
+        showWelcomeIn(container);
+        return;
+      }
+
+      const filteredNodes = applyFilters(data.nodes);
+      if (filteredNodes.length === 0) {
+        container.innerHTML = '';
+        container.insertAdjacentHTML('beforeend', '<div class="state-panel"><span class="state-icon">🪄</span><h2>Sin coincidencias</h2><p>Ningún nodo cumple los filtros actuales.</p></div>');
+        if (app.network) { app.network.destroy(); app.network = null; }
+        return;
+      }
+
+      // build vis data
+      const allowedIds = new Set(filteredNodes.map(n => n.id));
+      const milestoneIds = new Set((data.milestones || []).map(m => m.id));
+
+      const visNodes = filteredNodes.map(n => {
+        const statusColor = STATUS_OPTIONS.find(s => s.key === n.status)?.color || '#6b7280';
+        const size = n.priority === 'high' ? 30 : n.priority === 'medium' ? 24 : 18;
+        const isMilestone = milestoneIds.has(n.id);
+        return {
+          id: n.id,
+          label: n.label,
+          title: `${n.label}\nEstado: ${statusLabel(n.status)}\nProgreso: ${n.progress || 0}%`,
+          shape: 'dot',
+          size,
+          color: {
+            background: statusColor,
+            border: isMilestone ? '#fff' : '#000',
+            highlight: { background: '#5eead4', border: '#fff' },
+          },
+          borderWidth: isMilestone ? 4 : 1,
+          font: { color: '#e4e7eb', size: 13, face: 'inherit' },
+        };
+      });
+
+      const visEdges = (data.edges || [])
+        .filter(e => allowedIds.has(e.from) && allowedIds.has(e.to))
+        .map(e => ({
+          from: e.from,
+          to: e.to,
+          arrows: 'to',
+          label: e.label || '',
+          color: { color: '#555', highlight: '#2dd4bf' },
+          font: { color: '#8b8fa3', size: 10, align: 'middle', background: 'rgba(15,17,23,0.7)' },
+          smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.4 },
+        }));
+
+      // destroy previous
+      if (app.network) { app.network.destroy(); app.network = null; }
+      container.innerHTML = '';
+
+      const options = {
+        layout: {
+          hierarchical: {
+            enabled: true,
+            direction: 'DU',
+            sortMethod: 'directed',
+            levelSeparation: 120,
+            nodeSpacing: 140,
+          },
+        },
+        physics: {
+          enabled: true,
+          hierarchicalRepulsion: { nodeDistance: 140 },
+          stabilization: { iterations: 200, fit: true },
+        },
+        interaction: {
+          hover: true,
+          tooltipDelay: 150,
+          dragNodes: true,
+          zoomView: true,
+          navigationButtons: false,
+        },
+      };
+
+      try {
+        app.network = new vis.Network(container, {
+          nodes: new vis.DataSet(visNodes),
+          edges: new vis.DataSet(visEdges),
+        }, options);
+
+        app.network.on('click', (params) => {
+          if (params.nodes && params.nodes.length > 0) {
+            showGraphOverlay(params.nodes[0]);
+          } else {
+            hideGraphOverlay();
+          }
+        });
+
+        app.network.once('stabilizationIterationsDone', () => {
+          app.network.setOptions({ physics: false });
+        });
+      } catch (e) {
+        container.innerHTML = '<div class="state-panel error"><span class="state-icon">⚠️</span><h2>Error renderizando grafo</h2><p>' + escapeHtml(e.message) + '</p></div>';
+      }
+    }
+
+    function showGraphOverlay(nodeId) {
+      const data = currentProjectData();
+      if (!data) return;
+      const node = data.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      $('#overlay-title').textContent = node.label;
+      $('#overlay-desc').textContent = node.description || '';
+      const groupColor = GROUP_OPTIONS.find(g => g.key === node.group)?.color || '#666';
+      $('#overlay-meta').innerHTML = `
+        <div><span>Estado</span><strong style="color:${STATUS_OPTIONS.find(s => s.key === node.status)?.color}">${escapeHtml(statusLabel(node.status))}</strong></div>
+        <div><span>Progreso</span><strong>${node.progress || 0}%</strong></div>
+        <div><span>Grupo</span><strong style="color:${groupColor}">${escapeHtml(node.group || '—')}</strong></div>
+        <div><span>Prioridad</span><strong>${escapeHtml(node.priority || '—')}</strong></div>
+      `;
+      $('#graph-overlay').classList.add('visible');
+    }
+
+    function hideGraphOverlay() {
+      $('#graph-overlay').classList.remove('visible');
+    }
+
+    /* ============== Kanban view ============== */
+    function renderKanban() {
+      // destroy old sortable instances
+      app.sortableInstances.forEach(inst => { try { inst.destroy(); } catch (e) {} });
+      app.sortableInstances = [];
+
+      const board = $('#kanban-board');
+      board.innerHTML = '';
+
+      const data = currentProjectData();
+      if (!data) {
+        showWelcomeIn(board);
+        return;
+      }
+
+      const nodes = applyFilters(data.nodes);
+
+      // group nodes by column
+      const byCol = {};
+      KANBAN_COLUMNS.forEach(c => { byCol[c.id] = []; });
+      nodes.forEach(n => {
+        const colId = STATUS_TO_COLUMN[n.status] || 'todo';
+        byCol[colId].push(n);
+      });
+
+      KANBAN_COLUMNS.forEach(col => {
+        const colEl = document.createElement('div');
+        colEl.className = 'kanban-column';
+        colEl.dataset.col = col.id;
+        colEl.innerHTML = `
+          <div class="kanban-col-header">
+            <h4><span class="col-dot" style="background:${col.color}"></span>${escapeHtml(col.label)}</h4>
+            <span class="col-count">${byCol[col.id].length}</span>
+          </div>
+          <div class="kanban-col-body" data-col-body="${col.id}"></div>
+        `;
+        board.appendChild(colEl);
+
+        const body = colEl.querySelector('.kanban-col-body');
+        if (byCol[col.id].length === 0) {
+          // empty drop area (still gets sortable to allow drop)
+        }
+        byCol[col.id].forEach(node => {
+          body.appendChild(buildKanbanCard(node));
+        });
+      });
+
+      if (nodes.length === 0) {
+        board.insertAdjacentHTML('afterend', '');
+      }
+
+      // init sortable
+      if (!window.__SORT_LOAD_FAILED__ && typeof Sortable !== 'undefined') {
+        $$('.kanban-col-body').forEach(bodyEl => {
+          const inst = Sortable.create(bodyEl, {
+            group: 'kanban',
+            animation: 180,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            forceFallback: false,
+            onEnd: (evt) => {
+              // update column count
+              $$('.kanban-column').forEach(colEl => {
+                const id = colEl.dataset.col;
+                const cnt = colEl.querySelectorAll('.kanban-card').length;
+                const countEl = colEl.querySelector('.col-count');
+                if (countEl) countEl.textContent = cnt;
+              });
+            },
+          });
+          app.sortableInstances.push(inst);
+        });
+      }
+    }
+
+    function buildKanbanCard(node) {
+      const card = document.createElement('div');
+      card.className = 'kanban-card';
+      card.dataset.id = node.id;
+      const group = node.group || '';
+      const priority = node.priority || 'medium';
+      card.innerHTML = `
+        <div class="kanban-card-title">${escapeHtml(node.label)}</div>
+        <div class="kanban-card-badges">
+          ${group ? `<span class="group-badge ${escapeHtml(group)}">${escapeHtml(group)}</span>` : ''}
+          <span class="priority-pill ${escapeHtml(priority)}">${escapeHtml(priority)}</span>
+        </div>
+        <div class="kanban-card-progress">
+          <div class="progress-bar">
+            <div class="progress-bar-fill ${escapeHtml(node.status)}" style="width:${clamp(node.progress || 0, 0, 100)}%"></div>
+          </div>
+          <div class="kanban-card-progress-text">
+            <span>Progreso</span><span>${clamp(node.progress || 0, 0, 100)}%</span>
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    /* ============== List view ============== */
+    function renderList() {
+      const root = $('#list-table');
+      root.innerHTML = '';
+
+      const data = currentProjectData();
+      if (!data) {
+        showWelcomeIn(root);
+        return;
+      }
+
+      let nodes = applyFilters(data.nodes);
+      if (nodes.length === 0) {
+        root.innerHTML = '<div class="state-panel"><span class="state-icon">🪄</span><h2>Sin coincidencias</h2><p>Ningún nodo cumple los filtros actuales.</p></div>';
+        return;
+      }
+
+      // sort
+      const { col, dir } = app.sort;
+      const sortNum = dir === 'asc' ? 1 : -1;
+      const statusOrder = { done: 4, active: 3, review: 2, pending: 1, blocked: 0 };
+      const priOrder = { high: 3, medium: 2, low: 1 };
+
+      nodes = nodes.slice().sort((a, b) => {
+        let va, vb;
+        switch (col) {
+          case 'name': va = a.label || ''; vb = b.label || ''; return va.localeCompare(vb) * sortNum;
+          case 'status': va = statusOrder[a.status] || 0; vb = statusOrder[b.status] || 0; return (va - vb) * sortNum;
+          case 'group': va = a.group || ''; vb = b.group || ''; return va.localeCompare(vb) * sortNum;
+          case 'priority': va = priOrder[a.priority] || 0; vb = priOrder[b.priority] || 0; return (va - vb) * sortNum;
+          case 'progress': va = a.progress || 0; vb = b.progress || 0; return (va - vb) * sortNum;
+          default: return 0;
+        }
+      });
+
+      const header = document.createElement('div');
+      header.className = 'list-row head';
+      header.innerHTML = `
+        <span></span>
+        <span class="sortable ${col === 'name' ? 'sorted' : ''}" data-col="name">Nombre <span class="sort-arrow">${col === 'name' && dir === 'desc' ? '▼' : '▲'}</span></span>
+        <span>Descripción</span>
+        <span class="sortable group-cell ${col === 'group' ? 'sorted' : ''}" data-col="group">Grupo <span class="sort-arrow">${col === 'group' && dir === 'desc' ? '▼' : '▲'}</span></span>
+        <span class="sortable priority-cell ${col === 'priority' ? 'sorted' : ''}" data-col="priority">Prioridad <span class="sort-arrow">${col === 'priority' && dir === 'desc' ? '▼' : '▲'}</span></span>
+        <span class="sortable ${col === 'progress' ? 'sorted' : ''}" data-col="progress">Progreso <span class="sort-arrow">${col === 'progress' && dir === 'desc' ? '▼' : '▲'}</span></span>
+      `;
+      root.appendChild(header);
+
+      header.querySelectorAll('.sortable').forEach(el => {
+        el.addEventListener('click', () => {
+          const newCol = el.dataset.col;
+          if (app.sort.col === newCol) {
+            app.sort.dir = app.sort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            app.sort.col = newCol;
+            app.sort.dir = 'asc';
+          }
+          renderList();
+        });
+      });
+
+      nodes.forEach(n => {
+        const row = document.createElement('div');
+        row.className = 'list-row body';
+        row.dataset.id = n.id;
+        const groupKey = n.group || '';
+        const pri = n.priority || 'medium';
+        row.innerHTML = `
+          <span class="status-icon ${escapeHtml(n.status)}" title="${escapeHtml(statusLabel(n.status))}"></span>
+          <span class="name" title="${escapeHtml(n.label)}">${escapeHtml(n.label)}</span>
+          <span class="desc" title="${escapeHtml(n.description || '')}">${escapeHtml(n.description || '')}</span>
+          <span class="group-cell">${groupKey ? `<span class="group-badge ${escapeHtml(groupKey)}">${escapeHtml(groupKey)}</span>` : ''}</span>
+          <span class="priority-cell"><span class="priority-pill ${escapeHtml(pri)}">${escapeHtml(pri)}</span></span>
+          <span class="progress-cell">
+            <span class="progress-bar"><span class="progress-bar-fill ${escapeHtml(n.status)}" style="width:${clamp(n.progress || 0, 0, 100)}%; display:block; height:100%;"></span></span>
+            <span>${clamp(n.progress || 0, 0, 100)}%</span>
+          </span>
+        `;
+        const nameEl = row.querySelector('.name');
+        nameEl.addEventListener('click', () => {
+          row.classList.toggle('expanded');
+        });
+        root.appendChild(row);
+      });
+    }
+
+    /* ============== Welcome / empty ============== */
+    function showWelcomeIn(el) {
+      el.innerHTML = '<div class="state-panel"><span class="state-icon">🗺️</span><h2>Bienvenido</h2><p>Selecciona un proyecto del panel lateral para visualizar su mapa conceptual.</p></div>';
+    }
+
+    function showWelcomeAll() {
+      $('#graph-canvas').innerHTML = '';
+      showWelcomeIn($('#graph-canvas'));
+      showWelcomeIn($('#kanban-board'));
+      showWelcomeIn($('#list-table'));
+    }
+
+    /* ============== View switching ============== */
+    function switchTab(view) {
+      // save scroll
+      const currentEl = $('#view-' + app.currentView);
+      if (currentEl) app.scrollPositions[app.currentView] = currentEl.scrollTop;
+
+      app.currentView = view;
+      $$('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+
+      rerenderActiveView();
+
+      const next = $('#view-' + view);
+      if (next && app.scrollPositions[view] != null) {
+        requestAnimationFrame(() => { next.scrollTop = app.scrollPositions[view]; });
+      }
+    }
+
+    function rerenderActiveView() {
+      renderInfoPanel();
+      if (!app.currentProject) {
+        showWelcomeAll();
+        return;
+      }
+      switch (app.currentView) {
+        case 'graph': renderGraph(); break;
+        case 'kanban': renderKanban(); break;
+        case 'list': renderList(); break;
+      }
+    }
+
+    /* ============== Project selection ============== */
+    async function selectProject(slug) {
+      // close mobile sidebar
+      closeSidebar();
+
+      // optimistic UI: show loading
+      $('#main-title-text').textContent = 'Cargando...';
+
+      try {
+        const data = await loadProject(slug);
+        app.currentProject = slug;
+        $('#main-title-text').textContent = data.project.name;
+        const idx = app.allData.INDEX.projects.find(p => p.slug === slug);
+        $('#main-title-icon').textContent = (idx && idx.icon) || '📦';
+        renderProjectList();
+        rerenderActiveView();
+      } catch (e) {
+        $('#main-title-text').textContent = 'Error';
+        $('#graph-canvas').innerHTML = '';
+        $('#graph-canvas').insertAdjacentHTML('beforeend',
+          '<div class="state-panel error"><span class="state-icon">⚠️</span><h2>Failed to load project</h2><p>' + escapeHtml(e.message) + '</p></div>');
+        $('#kanban-board').innerHTML = '';
+        $('#list-table').innerHTML = '';
+      }
+    }
+
+    /* ============== Sidebar (mobile) ============== */
+    function openSidebar() {
+      $('#sidebar').classList.add('open');
+      $('#backdrop').classList.add('visible');
+    }
+
+    function closeSidebar() {
+      $('#sidebar').classList.remove('open');
+      $('#backdrop').classList.remove('visible');
+    }
+
+    /* ============== Init ============== */
+    async function init() {
+      // filters & projects in parallel
+      renderFilters();
+
+      // sidebar toggle
+      $('#sidebar-toggle').addEventListener('click', () => {
+        if ($('#sidebar').classList.contains('open')) closeSidebar();
+        else openSidebar();
+      });
+      $('#backdrop').addEventListener('click', closeSidebar);
+
+      // tabs
+      $$('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.view));
+      });
+
+      // search (debounced 300ms)
+      const onSearch = debounce((val) => {
+        app.filters.search = val;
+        rerenderActiveView();
+      }, 300);
+      $('#search-input').addEventListener('input', (e) => onSearch(e.target.value));
+
+      // overlay close
+      $('#overlay-close').addEventListener('click', hideGraphOverlay);
+
+      // settings (placeholder)
+      $('#settings-btn').addEventListener('click', () => {
+        alert('Configuración: tema oscuro permanente. Próximamente: tema claro, exportar JSON.');
+      });
+
+      // resize → redraw graph
+      window.addEventListener('resize', debounce(() => {
+        if (app.currentView === 'graph' && app.network) {
+          app.network.redraw();
+          app.network.fit();
+        }
+      }, 200));
+
+      // load index
+      try {
+        await loadIndex();
+        renderProjectList();
+      } catch (e) {
+        $('#project-list').innerHTML =
+          '<div class="state-panel error" style="padding:12px; height:auto;"><p>Failed to load INDEX.json: ' + escapeHtml(e.message) + '</p></div>';
+        showWelcomeAll();
+        return;
+      }
+
+      // auto-select first project
+      if (app.allData.INDEX.projects && app.allData.INDEX.projects.length > 0) {
+        selectProject(app.allData.INDEX.projects[0].slug);
+      } else {
+        showWelcomeAll();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+{
+  "project": {
+    "name": "Horus Phone Bridge",
+    "slug": "horus-phone-bridge",
+    "description": "Puente entre Horus (OpenClaw) y un teléfono Android para control remoto, notificaciones, TTS estilo Alfred y mensajería WhatsApp.",
+    "status": "active",
+    "progress": 47,
+    "lastUpdated": "2026-05-23",
+    "tags": ["android", "nodejs", "bridge", "tts", "whatsapp"]
+  },
+  "nodes": [
+    {
+      "id": "server",
+      "label": "Bridge Server",
+      "description": "Servidor Node.js que expone API REST/WebSocket para comunicación bidireccional con el teléfono. Maneja autenticación, ruteo de eventos y persistencia de estado.",
+      "status": "done",
+      "progress": 100,
+      "group": "backend",
+      "priority": "high"
+    },
+    {
+      "id": "android-app",
+      "label": "Android App",
+      "description": "App nativa Kotlin que se conecta al bridge server, expone capacidades del teléfono y mantiene conexión en background.",
+      "status": "active",
+      "progress": 70,
+      "group": "mobile",
+      "priority": "high"
+    },
+    {
+      "id": "tts-module",
+      "label": "TTS Module",
+      "description": "Módulo de síntesis de voz estilo Alfred. Recibe texto, lo convierte a audio y lo reproduce con personalidad consistente.",
+      "status": "active",
+      "progress": 60,
+      "group": "frontend",
+      "priority": "medium"
+    },
+    {
+      "id": "whatsapp-integration",
+      "label": "WhatsApp Integration",
+      "description": "Envío y lectura de mensajes de WhatsApp vía Accessibility Service en Android. Permite a Horus comunicarse por WhatsApp.",
+      "status": "pending",
+      "progress": 0,
+      "group": "backend",
+      "priority": "high"
+    },
+    {
+      "id": "notifications",
+      "label": "Notification System",
+      "description": "Captura de notificaciones del teléfono y envío al servidor. Permite a Horus reaccionar a alertas en tiempo real.",
+      "status": "active",
+      "progress": 40,
+      "group": "mobile",
+      "priority": "medium"
+    },
+    {
+      "id": "remote-control",
+      "label": "Remote Control",
+      "description": "Comandos remotos para controlar el teléfono desde Horus: llamadas, SMS, apertura de apps, etc.",
+      "status": "pending",
+      "progress": 10,
+      "group": "backend",
+      "priority": "medium"
+    },
+    {
+      "id": "auth",
+      "label": "Auth & Pairing",
+      "description": "Sistema de pairing seguro entre el teléfono y el servidor mediante QR + tokens rotatorios.",
+      "status": "done",
+      "progress": 100,
+      "group": "infrastructure",
+      "priority": "high"
+    },
+    {
+      "id": "dashboard-ui",
+      "label": "Dashboard UI",
+      "description": "Interfaz web para monitorear estado del teléfono, ver logs y enviar comandos manualmente.",
+      "status": "review",
+      "progress": 85,
+      "group": "frontend",
+      "priority": "low"
+    }
+  ],
+  "edges": [
+    {"from": "auth", "to": "server", "type": "dependency", "label": "secures"},
+    {"from": "server", "to": "android-app", "type": "dependency", "label": "API"},
+    {"from": "server", "to": "tts-module", "type": "dependency", "label": "audio"},
+    {"from": "server", "to": "whatsapp-integration", "type": "dependency", "label": "msgs"},
+    {"from": "android-app", "to": "notifications", "type": "dependency"},
+    {"from": "android-app", "to": "whatsapp-integration", "type": "dependency"},
+    {"from": "android-app", "to": "remote-control", "type": "dependency"},
+    {"from": "server", "to": "dashboard-ui", "type": "dependency", "label": "data"}
+  ],
+  "milestones": [
+    {
+      "id": "m1",
+      "label": "MVP funcional",
+      "date": "2026-06-01",
+      "status": "active",
+      "description": "Bridge + Android + TTS + Notifications funcionando end-to-end"
+    },
+    {
+      "id": "m2",
+      "label": "WhatsApp E2E",
+      "date": "2026-07-15",
+      "status": "pending",
+      "description": "Integración completa con WhatsApp lista para uso diario"
+    }
+  ]
+}
