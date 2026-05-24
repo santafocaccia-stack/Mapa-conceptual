@@ -6,6 +6,8 @@
     "status": "active",
     "progress": 74,
     "lastUpdated": "2026-05-23",
+    "ganttStart": "2026-05-01",
+    "ganttEnd": "2026-06-01",
     "tags": ["web", "dashboard", "visualization", "static"]
   },
   "nodes": [
@@ -16,7 +18,10 @@
       "status": "done",
       "progress": 100,
       "group": "design",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-01",
+      "ganttEnd": "2026-05-05",
+      "tags": ["architecture", "design"]
     },
     {
       "id": "graph-view",
@@ -25,7 +30,10 @@
       "status": "done",
       "progress": 100,
       "group": "frontend",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-05",
+      "ganttEnd": "2026-05-10",
+      "tags": ["visualization", "graph"]
     },
     {
       "id": "kanban-view",
@@ -34,7 +42,10 @@
       "status": "done",
       "progress": 100,
       "group": "frontend",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-10",
+      "ganttEnd": "2026-05-14",
+      "tags": ["kanban", "dragdrop"]
     },
     {
       "id": "list-view",
@@ -43,7 +54,10 @@
       "status": "done",
       "progress": 100,
       "group": "frontend",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-14",
+      "ganttEnd": "2026-05-16",
+      "tags": ["list", "table"]
     },
     {
       "id": "responsive",
@@ -52,7 +66,10 @@
       "status": "done",
       "progress": 100,
       "group": "design",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-16",
+      "ganttEnd": "2026-05-18",
+      "tags": ["responsive", "mobile"]
     },
     {
       "id": "deployment",
@@ -61,7 +78,10 @@
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-20",
+      "ganttEnd": "2026-05-22",
+      "tags": ["deploy", "ci"]
     },
     {
       "id": "data-loader",
@@ -70,7 +90,10 @@
       "status": "done",
       "progress": 100,
       "group": "backend",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-03",
+      "ganttEnd": "2026-05-07",
+      "tags": ["data", "loading"]
     },
     {
       "id": "filters",
@@ -79,7 +102,10 @@
       "status": "done",
       "progress": 100,
       "group": "frontend",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-07",
+      "ganttEnd": "2026-05-12",
+      "tags": ["filter", "search"]
     },
     {
       "id": "testing",
@@ -88,7 +114,10 @@
       "status": "done",
       "progress": 100,
       "group": "backend",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-18",
+      "ganttEnd": "2026-05-20",
+      "tags": ["testing", "qa"]
     },
     {
       "id": "horus-orchestration",
@@ -97,7 +126,22 @@
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-01",
+      "ganttEnd": "2026-05-23",
+      "tags": ["orchestration", "meta"]
+    },
+    {
+      "id": "m1",
+      "label": "⭐ V1 Release",
+      "description": "Primera versión pública con las 3 vistas, filtros y deploy a GitHub Pages",
+      "status": "done",
+      "progress": 100,
+      "group": "infrastructure",
+      "priority": "high",
+      "ganttStart": "2026-05-01",
+      "ganttEnd": "2026-05-23",
+      "tags": ["milestone", "release"]
     }
   ],
   "edges": [
@@ -123,6 +167,7 @@
       "label": "V1 Release",
       "date": "2026-05-23",
       "status": "done",
+      "type": "milestone",
       "description": "Primera versión pública con las 3 vistas, filtros y deploy a GitHub Pages"
     }
   ]

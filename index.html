@@ -11,13 +11,15 @@
 
   <style>
     :root {
-      --bg-primary: #0f1117;
-      --bg-secondary: #1a1d27;
-      --bg-tertiary: #222639;
-      --border: #2a2e3e;
-      --text-primary: #e4e7eb;
+      --bg-primary: #0a0c10;
+      --bg-secondary: #12141c;
+      --bg-tertiary: #1c1f2b;
+      --bg-glass: rgba(28,31,43,0.7);
+      --border: #252836;
+      --text-primary: #f0f2f5;
       --text-secondary: #8b8fa3;
       --accent: #2dd4bf;
+      --accent-glow: rgba(45,212,191,0.3);
       --accent-hover: #5eead4;
       --done: #22c55e;
       --active: #2dd4bf;
@@ -421,6 +423,52 @@
       letter-spacing: 0.04em;
     }
 
+    /* ============== Glass cards & animations ============== */
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(45,212,191,0.1);
+      transition: all var(--t-base);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .shimmer {
+      background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-glass) 50%, var(--bg-tertiary) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-in { animation: slideIn 0.25s ease; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-bar-animated div { transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    .counter { display: inline-block; transition: all 0.3s; }
+
+    .glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 4px var(--accent-glow); }
+      50% { box-shadow: 0 0 12px var(--accent-glow); }
+    }
+
     /* ============== Main ============== */
     .main {
       grid-area: main;
@@ -543,6 +591,29 @@
       width: 100%;
       height: 100%;
     }
+
+    .fullscreen-btn {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 10;
+      background: var(--bg-glass);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 16px;
+      color: var(--text-secondary);
+      transition: color var(--t-base);
+    }
+    .fullscreen-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+
+    .sidebar.hidden { display: none; }
+    .fullscreen-mode .main { margin-left: 0; width: 100%; }
+    .fullscreen-mode .header { padding: 4px 12px; min-height: 40px; }
 
     .graph-overlay {
       position: absolute;
@@ -777,6 +848,10 @@
     .group-badge.mobile { background: rgba(34, 197, 94, 0.15); color: var(--mobile); }
     .group-badge.infrastructure { background: rgba(245, 158, 11, 0.15); color: var(--infra); }
     .group-badge.design { background: rgba(236, 72, 153, 0.15); color: var(--design); }
+
+    .node-milestone { border: 2px dashed var(--accent); animation: glowPulse 2s ease-in-out infinite; }
+    .milestone-card { border-left: 3px solid var(--accent); background: linear-gradient(135deg, var(--bg-tertiary), rgba(45,212,191,0.05)); }
+    .milestone-row { background: rgba(45,212,191,0.03); }
 
     .priority-pill {
       font-size: 10px;
@@ -1013,6 +1088,38 @@
     }
 
     /* Reduced motion */
+    /* ============== Shortcuts modal ============== */
+    .shortcuts-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .shortcuts-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+    }
+    .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+    .shortcut-key {
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      border: 1px solid var(--border);
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -1042,6 +1149,7 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="settings-btn" aria-label="Settings" title="Configuración">⚙️</button>
+        <button class="icon-btn" id="shortcuts-btn" aria-label="Shortcuts" title="Atajos de teclado">⌨️</button>
       </div>
     </header>
 
@@ -1093,6 +1201,7 @@
           <button class="tab-btn active" data-view="graph" role="tab"><span class="tab-emoji">🕸</span> Grafo</button>
           <button class="tab-btn" data-view="kanban" role="tab"><span class="tab-emoji">📋</span> Kanban</button>
           <button class="tab-btn" data-view="list" role="tab"><span class="tab-emoji">📃</span> Lista</button>
+          <button class="tab-btn" data-view="timeline" role="tab"><span class="tab-emoji">📅</span> Timeline</button>
         </div>
       </div>
 
@@ -1100,6 +1209,7 @@
         <!-- Graph view -->
         <section class="view active" id="view-graph">
           <div class="graph-wrap">
+            <button class="icon-btn fullscreen-btn" id="fullscreen-btn" title="Pantalla completa (F)" style="position:absolute;top:8px;left:8px;z-index:10;background:var(--bg-glass);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:16px">⛶</button>
             <div id="graph-canvas"></div>
             <div class="graph-overlay" id="graph-overlay">
               <div class="graph-overlay-header">
@@ -1135,11 +1245,35 @@
             <div class="list-table" id="list-table"></div>
           </div>
         </section>
+
+        <!-- Timeline view -->
+        <section class="view" id="view-timeline">
+          <div class="list-wrap">
+            <div id="timeline-content"></div>
+          </div>
+        </section>
       </div>
     </main>
   </div>
 
   <div class="backdrop" id="backdrop"></div>
+
+  <div class="shortcuts-modal" id="shortcuts-modal" style="display:none">
+    <div class="shortcuts-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3>⌨️ Atajos de teclado</h3>
+        <button class="icon-btn" id="shortcuts-close" style="font-size:18px">✕</button>
+      </div>
+      <div class="shortcut-row"><span>🕸 Grafo</span><span class="shortcut-key">1</span></div>
+      <div class="shortcut-row"><span>📋 Kanban</span><span class="shortcut-key">2</span></div>
+      <div class="shortcut-row"><span>📃 Lista</span><span class="shortcut-key">3</span></div>
+      <div class="shortcut-row"><span>📅 Timeline</span><span class="shortcut-key">4</span></div>
+      <div class="shortcut-row"><span>⛶ Fullscreen</span><span class="shortcut-key">F</span></div>
+      <div class="shortcut-row"><span>🔍 Buscar</span><span class="shortcut-key">S</span></div>
+      <div class="shortcut-row"><span>❌ Cerrar</span><span class="shortcut-key">Esc</span></div>
+      <div class="shortcut-row"><span>⌨️ Ayuda</span><span class="shortcut-key">?</span></div>
+    </div>
+  </div>
 
   <!-- CDN libs -->
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"
@@ -1428,6 +1562,22 @@
         const statusColor = STATUS_OPTIONS.find(s => s.key === n.status)?.color || '#6b7280';
         const size = n.priority === 'high' ? 30 : n.priority === 'medium' ? 24 : 18;
         const isMilestone = milestoneIds.has(n.id);
+        if (isMilestone) {
+          return {
+            id: n.id,
+            label: n.label.replace('⭐ ',''),
+            title: `${n.label}\nEstado: ${statusLabel(n.status)}\nProgreso: ${n.progress || 0}%`,
+            shape: 'diamond',
+            size: 35,
+            borderWidth: 3,
+            color: {
+              background: statusColor,
+              border: '#2dd4bf',
+              highlight: { background: '#5eead4', border: '#fff' },
+            },
+            font: { color: '#e4e7eb', size: 13, face: 'inherit', bold: true },
+          };
+        }
         return {
           id: n.id,
           label: n.label,
@@ -1436,10 +1586,10 @@
           size,
           color: {
             background: statusColor,
-            border: isMilestone ? '#fff' : '#000',
+            border: '#000',
             highlight: { background: '#5eead4', border: '#fff' },
           },
-          borderWidth: isMilestone ? 4 : 1,
+          borderWidth: 1,
           font: { color: '#e4e7eb', size: 13, face: 'inherit' },
         };
       });
@@ -1711,6 +1861,54 @@
       });
     }
 
+    /* ============== Timeline view ============== */
+    function renderTimeline() {
+      const el = $('#timeline-content');
+      el.innerHTML = '';
+      const data = currentProjectData();
+      if (!data) { showWelcomeIn(el); return; }
+      let nodes = applyFilters(data.nodes);
+
+      let html = '<div class="fade-in" style="padding:16px">';
+
+      // Milestones section
+      if (data.milestones && data.milestones.length) {
+        html += '<h3 style="margin-bottom:12px">⭐ Hitos</h3><div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px">';
+        data.milestones.forEach(m => {
+          const statusColors = {done:'#22c55e', active:'#2dd4bf', pending:'#6b7280'};
+          html += `<div class="glass-card" style="min-width:180px;padding:12px;border-radius:8px;border-left:3px solid ${statusColors[m.status]||'#666'}">
+            <div style="font-size:18px">⭐</div>
+            <div style="font-weight:600;margin:4px 0">${escapeHtml(m.label)}</div>
+            <div style="font-size:11px;color:var(--text-secondary)">${m.date || ''}</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${m.description ? escapeHtml(m.description) : ''}</div>
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      // Timeline bar for tasks
+      html += '<h3 style="margin:16px 0 12px">📋 Tareas</h3>';
+      if (nodes.length === 0) {
+        html += '<div class="state-panel"><p>Sin coincidencias</p></div>';
+      } else {
+        nodes.forEach(n => {
+          const color = STATUS_OPTIONS.find(s => s.key === n.status)?.color || '#666';
+          const pct = clamp(n.progress || 0, 0, 100);
+          html += `<div class="glass-card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+            <div style="font-size:11px;font-weight:600;min-width:140px">${escapeHtml(n.label)}</div>
+            <div style="flex:1;height:20px;background:var(--bg-primary);border-radius:10px;overflow:hidden;position:relative">
+              <div style="width:${pct}%;height:100%;background:${color};border-radius:10px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>
+            </div>
+            <div style="font-size:11px;min-width:32px;text-align:right;font-variant-numeric:tabular-nums">${pct}%</div>
+            <span class="status-dot" style="background:${color};width:8px;height:8px;border-radius:50%;display:inline-block"></span>
+          </div>`;
+        });
+      }
+
+      html += '</div>';
+      el.innerHTML = html;
+    }
+
     /* ============== Welcome / empty ============== */
     function showWelcomeIn(el) {
       el.innerHTML = '<div class="state-panel"><span class="state-icon">🗺️</span><h2>Bienvenido</h2><p>Selecciona un proyecto del panel lateral para visualizar su mapa conceptual.</p></div>';
@@ -1751,6 +1949,7 @@
         case 'graph': renderGraph(); break;
         case 'kanban': renderKanban(); break;
         case 'list': renderList(); break;
+        case 'timeline': renderTimeline(); break;
       }
     }
 
@@ -1806,6 +2005,50 @@
       // tabs
       $$('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.view));
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        const views = ['graph', 'kanban', 'list', 'timeline'];
+        const idx = ['1','2','3','4'].indexOf(e.key);
+        if (idx >= 0) { switchTab(views[idx]); e.preventDefault(); }
+        if (e.key === 'f') { toggleFullscreen(); e.preventDefault(); }
+        if (e.key === 's') { $('#search-input').focus(); e.preventDefault(); }
+        if (e.key === 'Escape') { hideGraphOverlay(); exitFullscreen(); $('#shortcuts-modal').style.display = 'none'; }
+        if (e.key === '?') { $('#shortcuts-modal').style.display = 'flex'; e.preventDefault(); }
+      });
+
+      // Shortcuts modal
+      $('#shortcuts-btn').addEventListener('click', () => $('#shortcuts-modal').style.display = 'flex');
+      $('#shortcuts-close').addEventListener('click', () => $('#shortcuts-modal').style.display = 'none');
+      $('#shortcuts-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.target.style.display = 'none'; });
+
+      // Fullscreen
+      const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+          document.body.classList.add('fullscreen-mode');
+        } else {
+          document.exitFullscreen().catch(() => {});
+          document.body.classList.remove('fullscreen-mode');
+        }
+      };
+      const exitFullscreen = () => {
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      };
+      $('#fullscreen-btn').addEventListener('click', toggleFullscreen);
+
+      // Touch swipe for view switching
+      let touchStartX = 0;
+      document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+      document.addEventListener('touchend', (e) => {
+        const diff = touchStartX - e.changedTouches[0].screenX;
+        if (Math.abs(diff) > 80) {
+          const views = ['graph', 'kanban', 'list', 'timeline'];
+          const cur = views.indexOf(app.currentView);
+          if (diff > 0 && cur < 3) switchTab(views[cur + 1]);
+          if (diff < 0 && cur > 0) switchTab(views[cur - 1]);
+        }
       });
 
       // search (debounced 300ms)

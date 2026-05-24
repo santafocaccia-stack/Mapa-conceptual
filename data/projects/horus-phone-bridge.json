@@ -6,6 +6,8 @@
     "status": "active",
     "progress": 47,
     "lastUpdated": "2026-05-23",
+    "ganttStart": "2026-05-01",
+    "ganttEnd": "2026-06-01",
     "tags": ["android", "nodejs", "bridge", "tts", "whatsapp"]
   },
   "nodes": [
@@ -16,7 +18,10 @@
       "status": "done",
       "progress": 100,
       "group": "backend",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-01",
+      "ganttEnd": "2026-05-15",
+      "tags": ["core", "api"]
     },
     {
       "id": "android-app",
@@ -25,7 +30,10 @@
       "status": "active",
       "progress": 70,
       "group": "mobile",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-05",
+      "ganttEnd": "2026-05-25",
+      "tags": ["mobile", "core"]
     },
     {
       "id": "tts-module",
@@ -34,7 +42,10 @@
       "status": "active",
       "progress": 60,
       "group": "frontend",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-08",
+      "ganttEnd": "2026-05-28",
+      "tags": ["audio", "tts"]
     },
     {
       "id": "whatsapp-integration",
@@ -43,7 +54,10 @@
       "status": "pending",
       "progress": 0,
       "group": "backend",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-20",
+      "ganttEnd": "2026-06-15",
+      "tags": ["whatsapp", "messaging"]
     },
     {
       "id": "notifications",
@@ -52,7 +66,10 @@
       "status": "active",
       "progress": 40,
       "group": "mobile",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-10",
+      "ganttEnd": "2026-05-30",
+      "tags": ["notifications", "mobile"]
     },
     {
       "id": "remote-control",
@@ -61,7 +78,10 @@
       "status": "pending",
       "progress": 10,
       "group": "backend",
-      "priority": "medium"
+      "priority": "medium",
+      "ganttStart": "2026-05-25",
+      "ganttEnd": "2026-06-10",
+      "tags": ["remote", "control"]
     },
     {
       "id": "auth",
@@ -70,7 +90,10 @@
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
-      "priority": "high"
+      "priority": "high",
+      "ganttStart": "2026-05-01",
+      "ganttEnd": "2026-05-10",
+      "tags": ["auth", "security"]
     },
     {
       "id": "dashboard-ui",
@@ -79,7 +102,34 @@
       "status": "review",
       "progress": 85,
       "group": "frontend",
-      "priority": "low"
+      "priority": "low",
+      "ganttStart": "2026-05-15",
+      "ganttEnd": "2026-06-01",
+      "tags": ["ui", "dashboard"]
+    },
+    {
+      "id": "m1",
+      "label": "⭐ MVP funcional",
+      "description": "Bridge + Android + TTS + Notifications funcionando end-to-end",
+      "status": "active",
+      "progress": 70,
+      "group": "backend",
+      "priority": "high",
+      "ganttStart": "2026-05-01",
+      "ganttEnd": "2026-06-01",
+      "tags": ["milestone", "mvp"]
+    },
+    {
+      "id": "m2",
+      "label": "⭐ WhatsApp E2E",
+      "description": "Integración completa con WhatsApp lista para uso diario",
+      "status": "pending",
+      "progress": 0,
+      "group": "backend",
+      "priority": "high",
+      "ganttStart": "2026-05-20",
+      "ganttEnd": "2026-07-15",
+      "tags": ["milestone", "whatsapp"]
     }
   ],
   "edges": [
@@ -98,6 +148,7 @@
       "label": "MVP funcional",
       "date": "2026-06-01",
       "status": "active",
+      "type": "milestone",
       "description": "Bridge + Android + TTS + Notifications funcionando end-to-end"
     },
     {
@@ -105,6 +156,7 @@
       "label": "WhatsApp E2E",
       "date": "2026-07-15",
       "status": "pending",
+      "type": "milestone",
       "description": "Integración completa con WhatsApp lista para uso diario"
     }
   ]
