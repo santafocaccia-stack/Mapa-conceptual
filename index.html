@@ -878,6 +878,38 @@
     }
     #graph canvas { outline: none !important; }
 
+    .graph-particles {
+      position: absolute; inset: 0; z-index: 0;
+      pointer-events: none; opacity: 0.5;
+    }
+    #graph { position: absolute; inset: 0; z-index: 1; }
+    .metric-strip {
+      display: flex; gap: 16px; padding: 10px 16px;
+      background: var(--bg-glass); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border); position: relative; z-index: 5;
+    }
+    .metric-widget { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 60px; position: relative; }
+    .metric-ring-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: 700; color: var(--accent); }
+    .metric-value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; }
+    .metric-label { font-size: 9.5px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    .graph-view {
+      background-image:
+        linear-gradient(30deg, rgba(45,212,191,0.025) 1px, transparent 1px),
+        linear-gradient(150deg, rgba(45,212,191,0.025) 1px, transparent 1px);
+      background-size: 40px 70px;
+    }
+
+    .sidebar.compact { width: 60px; overflow: hidden; }
+    .sidebar.compact .sidebar__section { display: none; }
+    .sidebar.compact .sidebar__footer { display: none; }
+    .sidebar.compact .project-card__head .project-card__title,
+    .sidebar.compact .project-card__head .project-card__pct,
+    .sidebar.compact .project-card__desc,
+    .sidebar.compact .project-card__bar,
+    .sidebar.compact .project-card__tags { display: none; }
+    .sidebar.compact .sidebar__heading { display: none; }
+
     .graph-legend {
       position: absolute;
       top: 16px;
@@ -2308,6 +2340,7 @@
           <span>v2.0 · Horus 2026</span>
           <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
         </div>
+        <button class="icon-btn" id="sidebarToggle" style="position:sticky;bottom:0;margin-top:auto;align-self:center;width:32px;height:32px" title="Collapse sidebar">◀</button>
       </aside>
 
       <!-- ─────────────── MAIN ─────────────── -->
@@ -2359,7 +2392,9 @@
 
           <!-- GRAPH VIEW -->
           <section class="view graph-view active" data-view="graph">
+            <div class="metric-strip" id="metricWidgets"></div>
             <div class="graph-view__canvas">
+              <canvas class="graph-particles" id="particles"></canvas>
               <div id="graph"></div>
               <div class="graph-legend" id="graphLegend"></div>
               <div class="graph-controls">
@@ -2801,6 +2836,109 @@
   }
 
   /* ═══════════════════════════════════════════════════════════
+     PARTICLES & METRIC WIDGETS
+     ═══════════════════════════════════════════════════════════ */
+  let particlesCleanup = null;
+  function initParticles() {
+    const canvas = document.getElementById('particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h, particles = [];
+    const COUNT = 50;
+    const CONNECT_DIST = 140;
+
+    function resize() {
+      const parent = canvas.parentElement;
+      w = canvas.width = parent.offsetWidth;
+      h = canvas.height = parent.offsetHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < COUNT; i++) {
+        particles.push({
+          x: Math.random() * w, y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+          r: Math.random() * 2 + 0.5,
+        });
+      }
+    }
+
+    let animId;
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+      }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < CONNECT_DIST) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            const alpha = (1 - dist / CONNECT_DIST) * 0.12;
+            ctx.strokeStyle = 'rgba(45,212,191,' + alpha + ')';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(45,212,191,0.35)';
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(animate);
+    }
+
+    resize();
+    createParticles();
+    animate();
+    const onResize = function() { resize(); createParticles(); };
+    window.addEventListener('resize', onResize);
+    return function cleanup() {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', onResize);
+    };
+  }
+
+  function renderMetricWidgets() {
+    const project = STATE.currentProject;
+    if (!project) return;
+    const nodes = (project.nodes || []).filter(function(n) { return !isMilestone(n); });
+    const total = nodes.length;
+    const done = nodes.filter(function(n) { return n.status === 'done'; }).length;
+    const active = nodes.filter(function(n) { return n.status === 'active'; }).length;
+    const blocked = nodes.filter(function(n) { return n.status === 'blocked'; }).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const circ = 2 * Math.PI * 17;
+    const offset = circ * (1 - pct / 100);
+
+    var root = document.getElementById('metricWidgets');
+    if (!root) return;
+    root.innerHTML =
+      '<div class="metric-widget" style="position:relative">' +
+        '<svg class="metric-ring" viewBox="0 0 40 40" width="36" height="36">' +
+          '<circle cx="20" cy="20" r="17" fill="none" stroke="var(--border)" stroke-width="3"/>' +
+          '<circle cx="20" cy="20" r="17" fill="none" stroke="var(--accent)" stroke-width="3"' +
+            ' stroke-dasharray="' + circ + ' ' + circ + '" stroke-dashoffset="' + offset + '"' +
+            ' transform="rotate(-90 20 20)" style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)"/>' +
+        '</svg>' +
+        '<div class="metric-ring-label">' + pct + '%</div>' +
+        '<div class="metric-label" style="margin-top:4px">Progreso</div>' +
+      '</div>' +
+      '<div class="metric-widget"><div class="metric-value" style="color:var(--active)">' + active + '</div><div class="metric-label">Activas</div></div>' +
+      '<div class="metric-widget"><div class="metric-value" style="color:var(--done)">' + done + '</div><div class="metric-label">Hechas</div></div>' +
+      '<div class="metric-widget"><div class="metric-value" style="color:var(--blocked)">' + blocked + '</div><div class="metric-label">Bloq.</div></div>';
+  }
+
+  /* ═══════════════════════════════════════════════════════════
      GRAPH VIEW (vis-network)
      ═══════════════════════════════════════════════════════════ */
   function renderGraph() {
@@ -2835,6 +2973,9 @@
     }
 
     renderGraphLegend();
+    renderMetricWidgets();
+    if (particlesCleanup) particlesCleanup();
+    particlesCleanup = initParticles();
     setTimeout(() => STATE.network && STATE.network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } }), 250);
   }
 
@@ -2842,12 +2983,20 @@
     const statusColor = getCssVar('--' + n.status) || '#8b8fa3';
     const milestone = isMilestone(n);
     const size = milestone ? 28 : (n.priority === 'high' ? 24 : n.priority === 'medium' ? 20 : 16);
+    const groupShapes = {
+      backend: 'hexagon',
+      frontend: 'square',
+      mobile: 'dot',
+      infrastructure: 'star',
+      design: 'triangle',
+    };
+    const shape = milestone ? 'diamond' : (groupShapes[n.group] || 'dot');
 
     return {
       id: n.id,
       label: n.label,
       title: buildTooltip(n),
-      shape: milestone ? 'diamond' : 'dot',
+      shape,
       size: size,
       color: {
         background: statusColor,
@@ -2882,8 +3031,10 @@
       to: e.to,
       label: e.label || '',
       arrows: { to: { enabled: true, scaleFactor: 0.6 } },
-      color: { color: '#3a3f55', highlight: '#2dd4bf', hover: '#5eead4', opacity: 0.7 },
-      smooth: { type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.45 },
+      color: { color: '#3a3f55', highlight: '#2dd4bf', hover: '#5eead4', opacity: 0.6 },
+      smooth: { type: 'continuous', roundness: 0.5 },
+      dashes: [8, 6],
+      width: 1.8,
       font: {
         size: 10,
         color: '#a4a8bc',
@@ -2891,7 +3042,6 @@
         strokeColor: '#0a0c10',
         align: 'middle',
       },
-      width: 1.5,
       selectionWidth: 2,
       hoverWidth: 1,
     };
@@ -2901,28 +3051,29 @@
     return {
       autoResize: true,
       layout: {
-        hierarchical: {
-          enabled: true,
-          direction: 'LR',
-          sortMethod: 'directed',
-          levelSeparation: 180,
-          nodeSpacing: 130,
-          treeSpacing: 200,
-          blockShifting: true,
-          edgeMinimization: true,
-          parentCentralization: true,
-        },
+        improvedLayout: true,
+        randomSeed: 42,
       },
       physics: {
-        enabled: STATE.physicsOn,
-        hierarchicalRepulsion: {
-          nodeDistance: 130,
-          centralGravity: 0.0,
-          springLength: 100,
-          springConstant: 0.01,
-          damping: 0.09,
+        enabled: true,
+        solver: 'barnesHut',
+        barnesHut: {
+          gravitationalConstant: -6000,
+          centralGravity: 0.3,
+          springLength: 180,
+          springConstant: 0.04,
+          damping: 0.06,
+          avoidOverlap: 1,
         },
-        stabilization: { iterations: 200, fit: true },
+        stabilization: {
+          iterations: 300,
+          updateInterval: 25,
+          onlyDynamicEdges: false,
+          fit: true,
+        },
+        maxVelocity: 30,
+        minVelocity: 0.75,
+        timestep: 0.5,
       },
       interaction: {
         hover: true,
@@ -2975,11 +3126,6 @@
 
     STATE.network.on('hoverNode', () => $('#graph').style.cursor = 'pointer');
     STATE.network.on('blurNode',  () => $('#graph').style.cursor = '');
-
-    STATE.network.once('stabilizationIterationsDone', () => {
-      STATE.network.setOptions({ physics: false });
-      STATE.physicsOn = false;
-    });
   }
 
   function showNodeDetail(node) {
@@ -3676,6 +3822,12 @@
       const side = $('#graphSide');
       if (side.classList.contains('collapsed')) side.classList.remove('collapsed');
       else side.classList.add('collapsed');
+    });
+
+    $('#sidebarToggle').addEventListener('click', () => {
+      $('#sidebar').classList.toggle('compact');
+      $('#sidebarToggle').textContent = $('#sidebar').classList.contains('compact') ? '▶' : '◀';
+      setTimeout(() => { if (STATE.network) STATE.network.fit({ animation: true }); }, 350);
     });
 
     // double click on graph node opens detail (already handled via select)
