@@ -878,62 +878,70 @@
     }
     #graph canvas { outline: none !important; }
 
-    .graph-particles {
-      position: absolute; inset: 0; z-index: 0;
-      pointer-events: none; opacity: 0.5;
-    }
     #graph { position: absolute; inset: 0; z-index: 1; }
     .metric-strip {
-      display: flex; gap: 16px; padding: 10px 16px;
+      display: flex; gap: 14px; padding: 8px 14px;
       background: var(--bg-glass); backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--border); position: relative; z-index: 5;
+      opacity: 0.78;
     }
-    .metric-widget { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 60px; position: relative; }
-    .metric-ring-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: 700; color: var(--accent); }
-    .metric-value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; }
-    .metric-label { font-size: 9.5px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .metric-strip:hover { opacity: 1; }
+    .metric-widget { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 54px; position: relative; }
+    .metric-ring-label { position: absolute; top: 14px; left: 50%; transform: translate(-50%, -50%); font-size: 9.5px; font-weight: 700; color: var(--accent); }
+    .metric-value { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; }
+    .metric-label { font-size: 9px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
-    .graph-view {
-      background-image:
-        linear-gradient(30deg, rgba(45,212,191,0.025) 1px, transparent 1px),
-        linear-gradient(150deg, rgba(45,212,191,0.025) 1px, transparent 1px);
-      background-size: 40px 70px;
-    }
-
-    .sidebar.compact { width: 60px; overflow: hidden; }
-    .sidebar.compact .sidebar__section { display: none; }
-    .sidebar.compact .sidebar__footer { display: none; }
-    .sidebar.compact .project-card__head .project-card__title,
-    .sidebar.compact .project-card__head .project-card__pct,
+    .sidebar.compact { width: 220px; overflow: hidden; }
     .sidebar.compact .project-card__desc,
-    .sidebar.compact .project-card__bar,
     .sidebar.compact .project-card__tags { display: none; }
-    .sidebar.compact .sidebar__heading { display: none; }
+    .sidebar.compact .project-card { padding: 10px 12px; }
+    .sidebar.compact .sidebar__heading { font-size: 10px; }
 
     .graph-legend {
       position: absolute;
-      top: 16px;
-      left: 16px;
-      padding: 10px 12px;
+      top: 12px;
+      left: 12px;
+      padding: 8px 10px;
       background: var(--bg-glass-strong);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--border);
       border-radius: var(--r-md);
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       z-index: 10;
-      font-size: 11.5px;
+      font-size: 10.5px;
       color: var(--text-secondary);
       pointer-events: none;
+      min-width: 130px;
     }
-    .graph-legend__row { display: flex; align-items: center; gap: 8px; }
+    .graph-legend__group {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .graph-legend__title {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .graph-legend__sep {
+      height: 1px; background: var(--border); margin: 4px 0;
+    }
+    .graph-legend__row { display: flex; align-items: center; gap: 7px; }
     .graph-legend__dot {
-      width: 9px; height: 9px; border-radius: 50%;
-      box-shadow: 0 0 8px currentColor;
+      width: 8px; height: 8px; border-radius: 50%;
     }
+    .graph-legend__shape {
+      width: 10px; height: 10px;
+      background: var(--text-secondary);
+      display: inline-block;
+    }
+    .graph-legend__shape--circle { border-radius: 50%; }
+    .graph-legend__shape--diamond { transform: rotate(45deg); width: 8px; height: 8px; }
 
     .graph-controls {
       position: absolute;
@@ -2394,7 +2402,6 @@
           <section class="view graph-view active" data-view="graph">
             <div class="metric-strip" id="metricWidgets"></div>
             <div class="graph-view__canvas">
-              <canvas class="graph-particles" id="particles"></canvas>
               <div id="graph"></div>
               <div class="graph-legend" id="graphLegend"></div>
               <div class="graph-controls">
@@ -2836,78 +2843,8 @@
   }
 
   /* ═══════════════════════════════════════════════════════════
-     PARTICLES & METRIC WIDGETS
+     METRIC WIDGETS
      ═══════════════════════════════════════════════════════════ */
-  let particlesCleanup = null;
-  function initParticles() {
-    const canvas = document.getElementById('particles');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let w, h, particles = [];
-    const COUNT = 50;
-    const CONNECT_DIST = 140;
-
-    function resize() {
-      const parent = canvas.parentElement;
-      w = canvas.width = parent.offsetWidth;
-      h = canvas.height = parent.offsetHeight;
-    }
-
-    function createParticles() {
-      particles = [];
-      for (let i = 0; i < COUNT; i++) {
-        particles.push({
-          x: Math.random() * w, y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
-          r: Math.random() * 2 + 0.5,
-        });
-      }
-    }
-
-    let animId;
-    function animate() {
-      ctx.clearRect(0, 0, w, h);
-      for (const p of particles) {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-      }
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if (dist < CONNECT_DIST) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            const alpha = (1 - dist / CONNECT_DIST) * 0.12;
-            ctx.strokeStyle = 'rgba(45,212,191,' + alpha + ')';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      }
-      for (const p of particles) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(45,212,191,0.35)';
-        ctx.fill();
-      }
-      animId = requestAnimationFrame(animate);
-    }
-
-    resize();
-    createParticles();
-    animate();
-    const onResize = function() { resize(); createParticles(); };
-    window.addEventListener('resize', onResize);
-    return function cleanup() {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', onResize);
-    };
-  }
-
   function renderMetricWidgets() {
     const project = STATE.currentProject;
     if (!project) return;
@@ -2974,23 +2911,14 @@
 
     renderGraphLegend();
     renderMetricWidgets();
-    if (particlesCleanup) particlesCleanup();
-    particlesCleanup = initParticles();
     setTimeout(() => STATE.network && STATE.network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } }), 250);
   }
 
   function buildVisNode(n) {
     const statusColor = getCssVar('--' + n.status) || '#8b8fa3';
     const milestone = isMilestone(n);
-    const size = milestone ? 28 : (n.priority === 'high' ? 24 : n.priority === 'medium' ? 20 : 16);
-    const groupShapes = {
-      backend: 'hexagon',
-      frontend: 'square',
-      mobile: 'dot',
-      infrastructure: 'star',
-      design: 'triangle',
-    };
-    const shape = milestone ? 'diamond' : (groupShapes[n.group] || 'dot');
+    const size = milestone ? 30 : (n.priority === 'high' ? 24 : n.priority === 'medium' ? 20 : 16);
+    const shape = milestone ? 'diamond' : 'dot';
 
     return {
       id: n.id,
@@ -3030,19 +2958,20 @@
       from: e.from,
       to: e.to,
       label: e.label || '',
-      arrows: { to: { enabled: true, scaleFactor: 0.6 } },
-      color: { color: '#3a3f55', highlight: '#2dd4bf', hover: '#5eead4', opacity: 0.6 },
-      smooth: { type: 'continuous', roundness: 0.5 },
-      dashes: [8, 6],
-      width: 1.8,
+      arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+      color: { color: '#4a5166', highlight: '#2dd4bf', hover: '#5eead4', opacity: 1 },
+      smooth: { type: 'cubicBezier', roundness: 0.4 },
+      width: 2.5,
       font: {
-        size: 10,
-        color: '#a4a8bc',
-        strokeWidth: 3,
-        strokeColor: '#0a0c10',
+        size: 11,
+        color: '#1a1f2e',
+        strokeWidth: 4,
+        strokeColor: '#ffffff',
         align: 'middle',
+        bold: { color: '#1a1f2e', size: 11, mod: '700' },
+        multi: 'html',
       },
-      selectionWidth: 2,
+      selectionWidth: 1.5,
       hoverWidth: 1,
     };
   }
@@ -3051,28 +2980,33 @@
     return {
       autoResize: true,
       layout: {
-        improvedLayout: true,
-        randomSeed: 42,
+        hierarchical: {
+          enabled: true,
+          direction: 'LR',
+          sortMethod: 'directed',
+          levelSeparation: 200,
+          nodeSpacing: 180,
+          treeSpacing: 250,
+          blockShifting: true,
+          edgeMinimization: true,
+          parentCentralization: true,
+        },
       },
       physics: {
         enabled: true,
-        solver: 'barnesHut',
-        barnesHut: {
-          gravitationalConstant: -6000,
-          centralGravity: 0.3,
-          springLength: 180,
-          springConstant: 0.04,
-          damping: 0.06,
-          avoidOverlap: 1,
+        hierarchicalRepulsion: {
+          nodeDistance: 180,
+          centralGravity: 0.2,
+          springLength: 150,
+          springConstant: 0.02,
+          damping: 0.09,
         },
         stabilization: {
-          iterations: 300,
-          updateInterval: 25,
-          onlyDynamicEdges: false,
+          iterations: 150,
           fit: true,
         },
-        maxVelocity: 30,
-        minVelocity: 0.75,
+        maxVelocity: 10,
+        minVelocity: 0.5,
         timestep: 0.5,
       },
       interaction: {
@@ -3088,7 +3022,7 @@
         scaling: { min: 14, max: 32 },
       },
       edges: {
-        chosen: { edge: (values) => { values.color = '#2dd4bf'; values.width = 2.5; } },
+        chosen: { edge: (values) => { values.color = '#2dd4bf'; values.width = 3.2; } },
       },
     };
   }
@@ -3108,12 +3042,30 @@
 
   function renderGraphLegend() {
     const root = $('#graphLegend');
-    root.innerHTML = STATUS_LIST.map(s => `
+    const statusRows = STATUS_LIST.map(s => `
       <div class="graph-legend__row">
-        <span class="graph-legend__dot" style="background:${s.color};color:${s.color}"></span>
+        <span class="graph-legend__dot" style="background:${s.color}"></span>
         <span>${escapeHtml(s.label)}</span>
       </div>
     `).join('');
+    root.innerHTML = `
+      <div class="graph-legend__group">
+        <div class="graph-legend__title">Estado</div>
+        ${statusRows}
+      </div>
+      <div class="graph-legend__sep"></div>
+      <div class="graph-legend__group">
+        <div class="graph-legend__title">Forma</div>
+        <div class="graph-legend__row">
+          <span class="graph-legend__shape graph-legend__shape--circle"></span>
+          <span>Tarea</span>
+        </div>
+        <div class="graph-legend__row">
+          <span class="graph-legend__shape graph-legend__shape--diamond"></span>
+          <span>Hito</span>
+        </div>
+      </div>
+    `;
   }
 
   function bindGraphEvents() {
