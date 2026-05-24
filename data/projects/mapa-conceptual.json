@@ -2,7 +2,7 @@
   "project": {
     "name": "Mapa Conceptual",
     "slug": "mapa-conceptual",
-    "description": "Dashboard interactivo single-file para visualizar el avance de proyectos en 3 vistas: grafo, kanban y lista. 100% estático, sin backend.",
+    "description": "Dashboard interactivo single-file para visualizar el avance de proyectos en 4 vistas: grafo, kanban, lista y timeline. 100% estático, sin backend.",
     "status": "active",
     "progress": 74,
     "lastUpdated": "2026-05-23",
@@ -13,8 +13,8 @@
   "nodes": [
     {
       "id": "arch",
-      "label": "Architecture & Design",
-      "description": "Arquitectura general, stack tecnológico, formato de datos JSON y paleta visual. Documentado en ARCHITECTURE.md.",
+      "label": "Arquitectura & Design",
+      "description": "Arquitectura general, stack tecnológico, formato de datos JSON y paleta visual premium oscura con acentos teal. Documentado en ARCHITECTURE.md.",
       "status": "done",
       "progress": 100,
       "group": "design",
@@ -26,7 +26,7 @@
     {
       "id": "graph-view",
       "label": "Graph View",
-      "description": "Vista de grafo interactivo con vis-network. Nodos coloreados por estado, edges con dependencias, layout jerárquico y panel de info.",
+      "description": "Vista de grafo interactivo con vis-network. Nodos coloreados por estado con degradado, edges curvas bezier, layout jerárquico y panel lateral de info.",
       "status": "done",
       "progress": 100,
       "group": "frontend",
@@ -38,7 +38,7 @@
     {
       "id": "kanban-view",
       "label": "Kanban View",
-      "description": "Tablero kanban drag & drop con SortableJS. Columnas To Do, In Progress, In Review, Done y Blocked.",
+      "description": "Tablero kanban drag & drop con SortableJS. Columnas To Do, In Progress, In Review, Done y Blocked. Tarjetas con glass effect y animaciones fluidas.",
       "status": "done",
       "progress": 100,
       "group": "frontend",
@@ -50,7 +50,7 @@
     {
       "id": "list-view",
       "label": "List View",
-      "description": "Vista de lista ordenable por columna con filtros rápidos, badges de grupo y barra de progreso por fila.",
+      "description": "Vista de lista ordenable por columna con filtros rápidos, badges de grupo, priority pills, progreso animado y expansión de filas para descripción.",
       "status": "done",
       "progress": 100,
       "group": "frontend",
@@ -60,9 +60,21 @@
       "tags": ["list", "table"]
     },
     {
+      "id": "timeline-view",
+      "label": "Timeline View",
+      "description": "Vista de timeline horizontal con milestones en cards glassmorphism y barras de progreso animadas para cada tarea con colores por estado.",
+      "status": "active",
+      "progress": 85,
+      "group": "frontend",
+      "priority": "medium",
+      "ganttStart": "2026-05-16",
+      "ganttEnd": "2026-05-19",
+      "tags": ["timeline", "gantt"]
+    },
+    {
       "id": "responsive",
       "label": "Responsive Layout",
-      "description": "Layout adaptativo desktop/tablet/mobile. Sidebar colapsable, drawer en mobile, breakpoints a 1024px y 768px.",
+      "description": "Layout adaptativo desktop/tablet/mobile con breakpoints a 1024px, 768px y 480px. Sidebar drawer en mobile, bottom tabs en tablet.",
       "status": "done",
       "progress": 100,
       "group": "design",
@@ -74,7 +86,7 @@
     {
       "id": "deployment",
       "label": "Deployment",
-      "description": "Deploy automático a GitHub Pages mediante GitHub Actions. Workflow en .github/workflows/pages.yml.",
+      "description": "Deploy automático a GitHub Pages mediante GitHub Actions. Workflow CI/CD en .github/workflows/pages.yml con build y deploy.",
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
@@ -86,7 +98,7 @@
     {
       "id": "data-loader",
       "label": "Data Loader",
-      "description": "Carga de INDEX.json y proyectos individuales vía fetch. Caché en memoria y manejo de errores de red.",
+      "description": "Carga de INDEX.json y proyectos individuales vía fetch con caché en memoria, manejo de errores graceful y skeleton loading mientras carga.",
       "status": "done",
       "progress": 100,
       "group": "backend",
@@ -98,7 +110,7 @@
     {
       "id": "filters",
       "label": "Filters & Search",
-      "description": "Sistema de filtros por estado, grupo y prioridad. Búsqueda por nombre con debounce. Aplica a las 3 vistas.",
+      "description": "Sistema de filtros por estado, grupo y prioridad con checkboxes. Búsqueda por nombre/descripción con debounce de 300ms. Aplica a las 4 vistas.",
       "status": "done",
       "progress": 100,
       "group": "frontend",
@@ -110,7 +122,7 @@
     {
       "id": "testing",
       "label": "Testing & QA",
-      "description": "Pruebas de carga de JSON, responsive, cambio de vistas, filtros y drag & drop en kanban.",
+      "description": "Pruebas de carga de JSON, responsive en múltiples resoluciones, cambio de vistas, filtros cross-view y drag & drop en kanban.",
       "status": "done",
       "progress": 100,
       "group": "backend",
@@ -122,7 +134,7 @@
     {
       "id": "horus-orchestration",
       "label": "Horus Orchestration",
-      "description": "Horus diseñó la arquitectura, Claude Code ejecutó la build, Horus revisó y deployó.",
+      "description": "Horus diseñó la arquitectura, Claude Code ejecutó la build, Horus revisó, mejoró y deployó. Ciclo completo IA + humano.",
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
@@ -132,9 +144,57 @@
       "tags": ["orchestration", "meta"]
     },
     {
+      "id": "glassmorphism-theme",
+      "label": "Glassmorphism Theme",
+      "description": "Sistema de diseño premium con backdrop-filter blur, bordes translúcidos, sombras multicapa, gradientes sutiles y paleta oscura teal.",
+      "status": "active",
+      "progress": 90,
+      "group": "design",
+      "priority": "medium",
+      "ganttStart": "2026-05-20",
+      "ganttEnd": "2026-05-25",
+      "tags": ["design", "ui"]
+    },
+    {
+      "id": "keyboard-shortcuts",
+      "label": "Keyboard Shortcuts",
+      "description": "Atajos de teclado: 1-4 para vistas, F pantalla completa, S búsqueda, ? ayuda modal, Esc cierra paneles.",
+      "status": "done",
+      "progress": 100,
+      "group": "frontend",
+      "priority": "low",
+      "ganttStart": "2026-05-17",
+      "ganttEnd": "2026-05-18",
+      "tags": ["ux", "keyboard"]
+    },
+    {
+      "id": "export-feature",
+      "label": "Export Feature",
+      "description": "Exportar proyecto actual como JSON descargable y exportar grafo como PNG usando html2canvas.",
+      "status": "pending",
+      "progress": 0,
+      "group": "frontend",
+      "priority": "low",
+      "ganttStart": "2026-06-01",
+      "ganttEnd": "2026-06-10",
+      "tags": ["export", "feature"]
+    },
+    {
+      "id": "mobile-touch",
+      "label": "Mobile Touch Support",
+      "description": "Detección de swipe horizontal para cambiar entre vistas en móvil. Sidebar full-screen drawer. Bottom tab bar en tablets.",
+      "status": "done",
+      "progress": 100,
+      "group": "frontend",
+      "priority": "medium",
+      "ganttStart": "2026-05-18",
+      "ganttEnd": "2026-05-20",
+      "tags": ["mobile", "touch"]
+    },
+    {
       "id": "m1",
       "label": "⭐ V1 Release",
-      "description": "Primera versión pública con las 3 vistas, filtros y deploy a GitHub Pages",
+      "description": "Primera versión pública con las 4 vistas, filtros, búsqueda, atajos de teclado y deploy a GitHub Pages",
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
@@ -142,24 +202,44 @@
       "ganttStart": "2026-05-01",
       "ganttEnd": "2026-05-23",
       "tags": ["milestone", "release"]
+    },
+    {
+      "id": "m2",
+      "label": "⭐ V2 Premium",
+      "description": "Segunda versión con glassmorphism completo, export PNG, animaciones mejoradas y tema premium",
+      "status": "active",
+      "progress": 70,
+      "group": "design",
+      "priority": "medium",
+      "ganttStart": "2026-05-20",
+      "ganttEnd": "2026-06-05",
+      "tags": ["milestone", "premium"]
     }
   ],
   "edges": [
-    {"from": "arch", "to": "graph-view", "type": "dependency"},
-    {"from": "arch", "to": "kanban-view", "type": "dependency"},
-    {"from": "arch", "to": "list-view", "type": "dependency"},
-    {"from": "arch", "to": "responsive", "type": "dependency"},
+    {"from": "arch", "to": "graph-view", "type": "dependency", "label": "defines"},
+    {"from": "arch", "to": "kanban-view", "type": "dependency", "label": "defines"},
+    {"from": "arch", "to": "list-view", "type": "dependency", "label": "defines"},
+    {"from": "arch", "to": "timeline-view", "type": "dependency", "label": "defines"},
+    {"from": "arch", "to": "responsive", "type": "dependency", "label": "defines"},
+    {"from": "arch", "to": "glassmorphism-theme", "type": "dependency", "label": "defines"},
     {"from": "data-loader", "to": "graph-view", "type": "dependency", "label": "data"},
     {"from": "data-loader", "to": "kanban-view", "type": "dependency", "label": "data"},
     {"from": "data-loader", "to": "list-view", "type": "dependency", "label": "data"},
-    {"from": "filters", "to": "graph-view", "type": "dependency"},
-    {"from": "filters", "to": "kanban-view", "type": "dependency"},
-    {"from": "filters", "to": "list-view", "type": "dependency"},
-    {"from": "graph-view", "to": "deployment", "type": "dependency"},
-    {"from": "kanban-view", "to": "deployment", "type": "dependency"},
-    {"from": "responsive", "to": "deployment", "type": "dependency"},
-    {"from": "testing", "to": "deployment", "type": "dependency"},
-    {"from": "horus-orchestration", "to": "deployment", "type": "dependency"}
+    {"from": "data-loader", "to": "timeline-view", "type": "dependency", "label": "data"},
+    {"from": "filters", "to": "graph-view", "type": "dependency", "label": "filters"},
+    {"from": "filters", "to": "kanban-view", "type": "dependency", "label": "filters"},
+    {"from": "filters", "to": "list-view", "type": "dependency", "label": "filters"},
+    {"from": "filters", "to": "timeline-view", "type": "dependency", "label": "filters"},
+    {"from": "graph-view", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "kanban-view", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "responsive", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "testing", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "horus-orchestration", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "keyboard-shortcuts", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "mobile-touch", "to": "responsive", "type": "dependency", "label": "extends"},
+    {"from": "timeline-view", "to": "deployment", "type": "dependency", "label": ""},
+    {"from": "glassmorphism-theme", "to": "graph-view", "type": "dependency", "label": "styles"}
   ],
   "milestones": [
     {
@@ -168,7 +248,15 @@
       "date": "2026-05-23",
       "status": "done",
       "type": "milestone",
-      "description": "Primera versión pública con las 3 vistas, filtros y deploy a GitHub Pages"
+      "description": "Primera versión pública con las 4 vistas, filtros y deploy a GitHub Pages"
+    },
+    {
+      "id": "m2",
+      "label": "V2 Premium",
+      "date": "2026-06-05",
+      "status": "active",
+      "type": "milestone",
+      "description": "Segunda versión con glassmorphism completo, export PNG, animaciones mejoradas y tema premium"
     }
   ]
 }

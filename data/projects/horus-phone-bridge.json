@@ -26,7 +26,7 @@
     {
       "id": "android-app",
       "label": "Android App",
-      "description": "App nativa Kotlin que se conecta al bridge server, expone capacidades del teléfono y mantiene conexión en background.",
+      "description": "App nativa Kotlin que se conecta al bridge server, expone capacidades del teléfono y mantiene conexión en background con reconexión automática.",
       "status": "active",
       "progress": 70,
       "group": "mobile",
@@ -38,7 +38,7 @@
     {
       "id": "tts-module",
       "label": "TTS Module",
-      "description": "Módulo de síntesis de voz estilo Alfred. Recibe texto, lo convierte a audio y lo reproduce con personalidad consistente.",
+      "description": "Módulo de síntesis de voz estilo Alfred. Recibe texto, lo convierte a audio y lo reproduce con personalidad consistente. Soporta múltiples voces y emociones.",
       "status": "active",
       "progress": 60,
       "group": "frontend",
@@ -50,7 +50,7 @@
     {
       "id": "whatsapp-integration",
       "label": "WhatsApp Integration",
-      "description": "Envío y lectura de mensajes de WhatsApp vía Accessibility Service en Android. Permite a Horus comunicarse por WhatsApp.",
+      "description": "Envío y lectura de mensajes de WhatsApp vía Accessibility Service en Android. Permite a Horus comunicarse por WhatsApp como un contacto más.",
       "status": "pending",
       "progress": 0,
       "group": "backend",
@@ -62,7 +62,7 @@
     {
       "id": "notifications",
       "label": "Notification System",
-      "description": "Captura de notificaciones del teléfono y envío al servidor. Permite a Horus reaccionar a alertas en tiempo real.",
+      "description": "Captura de notificaciones del teléfono y envío al servidor. Permite a Horus reaccionar a alertas en tiempo real. Filtra spam y prioriza mensajes importantes.",
       "status": "active",
       "progress": 40,
       "group": "mobile",
@@ -74,7 +74,7 @@
     {
       "id": "remote-control",
       "label": "Remote Control",
-      "description": "Comandos remotos para controlar el teléfono desde Horus: llamadas, SMS, apertura de apps, etc.",
+      "description": "Comandos remotos para controlar el teléfono desde Horus: llamadas, SMS, apertura de apps, ajuste de volumen y más.",
       "status": "pending",
       "progress": 10,
       "group": "backend",
@@ -86,7 +86,7 @@
     {
       "id": "auth",
       "label": "Auth & Pairing",
-      "description": "Sistema de pairing seguro entre el teléfono y el servidor mediante QR + tokens rotatorios.",
+      "description": "Sistema de pairing seguro entre el teléfono y el servidor mediante QR + tokens rotatorios con expiración automática.",
       "status": "done",
       "progress": 100,
       "group": "infrastructure",
@@ -98,7 +98,7 @@
     {
       "id": "dashboard-ui",
       "label": "Dashboard UI",
-      "description": "Interfaz web para monitorear estado del teléfono, ver logs y enviar comandos manualmente.",
+      "description": "Interfaz web para monitorear estado del teléfono, ver logs en tiempo real, estadísticas de uso y enviar comandos manualmente.",
       "status": "review",
       "progress": 85,
       "group": "frontend",
@@ -106,6 +106,30 @@
       "ganttStart": "2026-05-15",
       "ganttEnd": "2026-06-01",
       "tags": ["ui", "dashboard"]
+    },
+    {
+      "id": "encryption-layer",
+      "label": "Encryption Layer",
+      "description": "Cifrado extremo a extremo para todos los mensajes entre Horus y el teléfono. Usa AES-256-GCM + ECDH key exchange.",
+      "status": "blocked",
+      "progress": 15,
+      "group": "infrastructure",
+      "priority": "high",
+      "ganttStart": "2026-05-12",
+      "ganttEnd": "2026-05-22",
+      "tags": ["security", "crypto"]
+    },
+    {
+      "id": "voice-commands",
+      "label": "Voice Commands",
+      "description": "Reconocimiento de comandos de voz desde el teléfono. Horus escucha, interpreta y ejecuta acciones. Integración con Whisper local.",
+      "status": "pending",
+      "progress": 5,
+      "group": "frontend",
+      "priority": "low",
+      "ganttStart": "2026-06-01",
+      "ganttEnd": "2026-06-20",
+      "tags": ["voice", "ai"]
     },
     {
       "id": "m1",
@@ -134,13 +158,15 @@
   ],
   "edges": [
     {"from": "auth", "to": "server", "type": "dependency", "label": "secures"},
+    {"from": "encryption-layer", "to": "server", "type": "dependency", "label": "encrypts"},
     {"from": "server", "to": "android-app", "type": "dependency", "label": "API"},
     {"from": "server", "to": "tts-module", "type": "dependency", "label": "audio"},
     {"from": "server", "to": "whatsapp-integration", "type": "dependency", "label": "msgs"},
-    {"from": "android-app", "to": "notifications", "type": "dependency"},
-    {"from": "android-app", "to": "whatsapp-integration", "type": "dependency"},
-    {"from": "android-app", "to": "remote-control", "type": "dependency"},
-    {"from": "server", "to": "dashboard-ui", "type": "dependency", "label": "data"}
+    {"from": "android-app", "to": "notifications", "type": "dependency", "label": "captures"},
+    {"from": "android-app", "to": "whatsapp-integration", "type": "dependency", "label": "reads"},
+    {"from": "android-app", "to": "remote-control", "type": "dependency", "label": "executes"},
+    {"from": "server", "to": "dashboard-ui", "type": "dependency", "label": "data"},
+    {"from": "tts-module", "to": "voice-commands", "type": "dependency", "label": "voice"}
   ],
   "milestones": [
     {
