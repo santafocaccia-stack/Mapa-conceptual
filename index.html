@@ -2345,7 +2345,7 @@
         </section>
 
         <div class="sidebar__footer">
-          <span>v2.0 · Horus 2026</span>
+          <span>v3.0 · ⚡ Auto</span>
           <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
         </div>
         <button class="icon-btn" id="sidebarToggle" style="position:sticky;bottom:0;margin-top:auto;align-self:center;width:32px;height:32px" title="Collapse sidebar">◀</button>
@@ -2666,34 +2666,39 @@
      DATA LOADER
      ═══════════════════════════════════════════════════════════ */
   async function loadIndex() {
-    try {
-      const res = await fetch('data/INDEX.json', { cache: 'no-cache' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      STATE.index = await res.json();
-      return STATE.index;
-    } catch (err) {
-      console.error('Failed to load INDEX.json', err);
-      toast('No se pudo cargar el índice de proyectos', 'error');
-      throw err;
+    // Try Vercel API first, fall back to static file
+    const sources = ['api/index', 'data/INDEX.json'];
+    for (const src of sources) {
+      try {
+        const res = await fetch(src, { cache: 'no-cache' });
+        if (!res.ok) continue;
+        STATE.index = await res.json();
+        return STATE.index;
+      } catch (e) {
+        continue;
+      }
     }
+    toast('No se pudo cargar el índice de proyectos', 'error');
+    return null;
   }
 
   async function loadProject(slug) {
     if (STATE.projects.has(slug)) return STATE.projects.get(slug);
     showLoading(true);
-    try {
-      const res = await fetch(`data/projects/${slug}.json`, { cache: 'no-cache' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      STATE.projects.set(slug, data);
-      return data;
-    } catch (err) {
-      console.error('Failed to load project', slug, err);
-      toast(`Error cargando "${slug}"`, 'error');
-      throw err;
-    } finally {
-      setTimeout(() => showLoading(false), 220);
+    const sources = ['api/projects/' + slug, 'data/projects/' + slug + '.json'];
+    for (const src of sources) {
+      try {
+        const res = await fetch(src, { cache: 'no-cache' });
+        if (!res.ok) continue;
+        const data = await res.json();
+        STATE.projects.set(slug, data);
+        return data;
+      } catch (e) {
+        continue;
+      }
     }
+    toast('Error cargando proyecto "' + slug + '"', 'error');
+    return null;
   }
 
   function showLoading(on) {
@@ -3806,7 +3811,8 @@
     await waitForLibs();
 
     try {
-      await loadIndex();
+      const idx = await loadIndex();
+      if (!idx) { showLoading(false); return; }
       renderProjects();
 
       // initial selection: from URL or first
