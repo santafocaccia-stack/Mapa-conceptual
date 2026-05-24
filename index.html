@@ -2686,19 +2686,21 @@
     if (STATE.projects.has(slug)) return STATE.projects.get(slug);
     showLoading(true);
     const sources = ['api/projects/' + slug, 'data/projects/' + slug + '.json'];
+    let data = null;
     for (const src of sources) {
       try {
         const res = await fetch(src, { cache: 'no-cache' });
         if (!res.ok) continue;
-        const data = await res.json();
+        data = await res.json();
         STATE.projects.set(slug, data);
-        return data;
+        break;
       } catch (e) {
         continue;
       }
     }
-    toast('Error cargando proyecto "' + slug + '"', 'error');
-    return null;
+    showLoading(false);
+    if (!data) toast('Error cargando proyecto "' + slug + '"', 'error');
+    return data;
   }
 
   function showLoading(on) {
@@ -3814,6 +3816,7 @@
       const idx = await loadIndex();
       if (!idx) { showLoading(false); return; }
       renderProjects();
+      showLoading(false);
 
       // initial selection: from URL or first
       const url = new URL(location.href);
@@ -3826,8 +3829,12 @@
 
   function waitForLibs() {
     return new Promise(resolve => {
+      let attempts = 0;
+      const maxAttempts = 100; // ~6 seconds max
       const check = () => {
+        attempts++;
         if (typeof vis !== 'undefined' && typeof Sortable !== 'undefined') resolve();
+        else if (attempts >= maxAttempts) { resolve(); } // timeout, continue anyway
         else setTimeout(check, 60);
       };
       check();
